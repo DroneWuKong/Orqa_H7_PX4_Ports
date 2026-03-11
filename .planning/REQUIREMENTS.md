@@ -7,9 +7,9 @@
 
 ### Build System
 
-- [ ] **BUILD-01**: Developer can build PX4 firmware for `orqa/h7quadcore` target using Docker/pinned toolchain (no local compiler setup required)
-- [ ] **BUILD-02**: Board target compiles with zero errors and zero warnings
-- [ ] **BUILD-03**: Developer can flash firmware to the board via DFU mode using the boot button
+- [x] **BUILD-01**: Developer can build PX4 firmware for `orqa/h7quadcore` target using Docker/pinned toolchain (no local compiler setup required)
+- [x] **BUILD-02**: Board target compiles with zero errors and zero warnings
+- [x] **BUILD-03**: Developer can flash firmware to the board via DFU mode using the boot button
 
 ### Hardware Bringup
 
@@ -96,9 +96,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BUILD-01 | Phase 1 | Pending |
-| BUILD-02 | Phase 1 | Pending |
-| BUILD-03 | Phase 1 | Pending |
+| BUILD-01 | Phase 1 | Complete |
+| BUILD-02 | Phase 1 | Complete |
+| BUILD-03 | Phase 1 | Complete |
 | HW-01 | Phase 2 | Pending |
 | HW-02 | Phase 2 | Pending |
 | HW-03 | Phase 2 | Pending |

@@ -9,7 +9,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Scaffold and Build** — Board target compiles cleanly from a reproducible toolchain
+- [x] **Phase 1: Scaffold and Build** — Board target compiles cleanly from a reproducible toolchain (completed 2026-03-11)
 - [ ] **Phase 2: Sensors and Console** — USB console works, all sensors detected and publishing, QGC connected
 - [ ] **Phase 3: Motor Outputs** — All motors respond to DSHOT commands, bidirectional RPM telemetry confirmed
 - [ ] **Phase 4: GPS and Magnetometer** — GPS fix acquired outdoors, magnetometer heading published
@@ -80,7 +80,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Scaffold and Build | 0/1 | Planning done | - |
+| 1. Scaffold and Build | 1/1 | Complete   | 2026-03-11 |
 | 2. Sensors and Console | 0/? | Not started | - |
 | 3. Motor Outputs | 0/? | Not started | - |
 | 4. GPS and Magnetometer | 0/? | Not started | - |
