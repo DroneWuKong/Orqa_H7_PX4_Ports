@@ -30,8 +30,7 @@ PX4 boots, all critical hardware (dual IMU, baro, UARTs, motors) is correctly ma
 ### Out of Scope
 
 - iNav / Betaflight configuration — already working, not this project
-- MAX7456 OSD support in PX4 — PX4 doesn't use analog OSD
-- Dual camera switching — analog video, irrelevant to PX4 stack
+- MAX7456 OSD + dual camera switching (v1) — deferred to v2 for ISR use case (thermal + RGB platforms)
 - Assisted flight modes (Position Hold, Loiter) — GPS bring-up is v1, mode validation deferred to v2
 
 ## Context

@@ -67,6 +67,13 @@
 
 - **NAV-V2-01**: Position Hold / Loiter mode validated in flight
 
+### ISR / Dual Camera
+
+- **ISR-V2-01**: PX4 can switch between two analog camera inputs (thermal + RGB) via GPIO (pin PB09 camera switch, already wired on board)
+- **ISR-V2-02**: Camera switch controllable from MAVLink command or RC channel (no Betaflight pinio dependency)
+- **ISR-V2-03**: Analog video OSD overlay (MAX7456, SPI3) functional under PX4 — shows flight telemetry on video feed
+- **ISR-V2-04**: Payload trigger output functional via GPIO5 (PD14) — enables shutter/sensor trigger for ISR payloads
+
 ### Upstream
 
 - **UPS-V2-01**: Board target submitted as PR to PX4 mainline repository
