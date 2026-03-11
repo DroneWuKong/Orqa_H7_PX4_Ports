@@ -96,23 +96,23 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HW-02 | Phase 2 | Pending |
 | HW-03 | Phase 2 | Pending |
 | HW-04 | Phase 2 | Pending |
-| IMU-01 | Phase 3 | Pending |
-| IMU-02 | Phase 3 | Pending |
-| IMU-03 | Phase 3 | Pending |
-| BARO-01 | Phase 3 | Pending |
-| UART-01 | Phase 4 | Pending |
-| UART-02 | Phase 4 | Pending |
-| UART-03 | Phase 4 | Pending |
-| UART-04 | Phase 4 | Pending |
-| UART-05 | Phase 4 | Pending |
-| MOT-01 | Phase 5 | Pending |
-| MOT-02 | Phase 5 | Pending |
-| GPS-01 | Phase 6 | Pending |
-| GPS-02 | Phase 6 | Pending |
-| GPS-03 | Phase 6 | Pending |
-| FLY-01 | Phase 7 | Pending |
-| FLY-02 | Phase 7 | Pending |
-| FLY-03 | Phase 7 | Pending |
+| IMU-01 | Phase 2 | Pending |
+| IMU-02 | Phase 2 | Pending |
+| IMU-03 | Phase 2 | Pending |
+| BARO-01 | Phase 2 | Pending |
+| UART-01 | Phase 2 | Pending |
+| UART-02 | Phase 2 | Pending |
+| UART-03 | Phase 2 | Pending |
+| UART-04 | Phase 2 | Pending |
+| UART-05 | Phase 2 | Pending |
+| MOT-01 | Phase 3 | Pending |
+| MOT-02 | Phase 3 | Pending |
+| GPS-01 | Phase 4 | Pending |
+| GPS-02 | Phase 4 | Pending |
+| GPS-03 | Phase 4 | Pending |
+| FLY-01 | Phase 5 | Pending |
+| FLY-02 | Phase 5 | Pending |
+| FLY-03 | Phase 5 | Pending |
 
 **Coverage:**
 - v1 requirements: 24 total
@@ -121,4 +121,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-10*
-*Last updated: 2026-03-10 after initial definition*
+*Last updated: 2026-03-10 after roadmap creation (5-phase coarse mapping)*
