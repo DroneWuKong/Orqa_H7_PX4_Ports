@@ -24,7 +24,14 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PX4_SRC="$(cd "${SCRIPT_DIR}/../PX4-Autopilot" && pwd)"
+# PX4_SRC can be overridden; default searches sibling then subdirectory
+if [ -z "${PX4_SRC:-}" ]; then
+  if [ -d "${SCRIPT_DIR}/../PX4-Autopilot" ]; then
+    PX4_SRC="$(cd "${SCRIPT_DIR}/../PX4-Autopilot" && pwd)"
+  elif [ -d "${SCRIPT_DIR}/PX4-Autopilot" ]; then
+    PX4_SRC="$(cd "${SCRIPT_DIR}/PX4-Autopilot" && pwd)"
+  fi
+fi
 CCACHE_DIR="${HOME}/.ccache"
 TARGET="${1:-orqa_h7quadcore_default}"
 
@@ -38,20 +45,29 @@ fi
 
 mkdir -p "${CCACHE_DIR}"
 
+# Docker on Windows requires Windows-style paths (G:/...) not Git Bash paths (/g/...)
+if command -v cygpath &>/dev/null; then
+  PX4_SRC_DOCKER="$(cygpath -m "${PX4_SRC}")"
+  CCACHE_DIR_DOCKER="$(cygpath -m "${CCACHE_DIR}")"
+else
+  PX4_SRC_DOCKER="${PX4_SRC}"
+  CCACHE_DIR_DOCKER="${CCACHE_DIR}"
+fi
+
 echo "========================================"
 echo "  Orqa H7 QuadCore PX4 Build"
 echo "========================================"
 echo "  Target:     ${TARGET}"
-echo "  PX4 source: ${PX4_SRC}"
+echo "  PX4 source: ${PX4_SRC_DOCKER}"
 echo "  Docker:     px4io/px4-dev-nuttx-focal:2022-08-12"
 echo "========================================"
 
-docker run --rm \
+MSYS_NO_PATHCONV=1 docker run --rm \
   --env=LOCAL_USER_ID="$(id -u)" \
-  --env=CCACHE_DIR="${CCACHE_DIR}" \
-  --volume="${PX4_SRC}:${PX4_SRC}:rw" \
-  --volume="${CCACHE_DIR}:${CCACHE_DIR}:rw" \
-  --workdir="${PX4_SRC}" \
+  --env=CCACHE_DIR=/ccache \
+  --mount "type=bind,source=${PX4_SRC_DOCKER},target=/px4" \
+  --mount "type=bind,source=${CCACHE_DIR_DOCKER},target=/ccache" \
+  --workdir="/px4" \
   px4io/px4-dev-nuttx-focal:2022-08-12 \
   /bin/bash -c "make ${TARGET}"
 
