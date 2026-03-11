@@ -23,6 +23,7 @@ PX4 boots, all critical hardware (dual IMU, baro, UARTs, motors) is correctly ma
 - [ ] UART3, UART6, UART7, UART8 correctly assigned
 - [ ] USB console / MAVLink works
 - [ ] QGroundControl connects and shows sensor data
+- [ ] GPS + magnetometer functional (UART7 + I2C1)
 - [ ] Quad flies in Stabilized mode
 - [ ] Port contributed upstream to PX4 repository
 
@@ -31,7 +32,7 @@ PX4 boots, all critical hardware (dual IMU, baro, UARTs, motors) is correctly ma
 - iNav / Betaflight configuration — already working, not this project
 - MAX7456 OSD support in PX4 — PX4 doesn't use analog OSD
 - Dual camera switching — analog video, irrelevant to PX4 stack
-- GPS/magnetometer bring-up — v1 is FPV acro, GPS deferred
+- Assisted flight modes (Position Hold, Loiter) — GPS bring-up is v1, mode validation deferred to v2
 
 ## Context
 
@@ -83,7 +84,7 @@ PX4 boots, all critical hardware (dual IMU, baro, UARTs, motors) is correctly ma
 | Base on Matek H743 Slim target | Same MCU family, community-proven PX4 port, similar peripheral count | — Pending |
 | Dual IMU (both ICM-42688) | Board has two identical gyros; PX4 supports dual IMU for redundancy | — Pending |
 | DSHOT for motor output | FPV use case, ESC3030 supports DSHOT, better than PWM for acro | — Pending |
-| v1 scope: no GPS | FPV freestyle doesn't need GPS; simplifies initial port | — Pending |
+| GPS in v1 scope | User confirmed GPS required; UART7 + I2C1 mag both available on board | — Pending |
 
 ---
 *Last updated: 2026-03-10 after initialization*
