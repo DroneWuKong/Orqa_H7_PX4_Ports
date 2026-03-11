@@ -27,7 +27,10 @@
   1. Developer can run a single Docker command and produce a `.px4` firmware binary for `orqa/h7quadcore` without installing any local compiler
   2. The build completes with zero errors and zero warnings
   3. Developer can enter DFU mode and flash the firmware to the physical board using the boot button
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 01-01-PLAN.md — Scaffold board target from Matek H743 Slim, write build.sh, flash via DFU
 
 ### Phase 2: Sensors and Console
 **Goal**: Board is alive — USB console accessible, all sensor drivers detected and publishing data, QGroundControl connected over USB MAVLink
@@ -77,7 +80,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Scaffold and Build | 0/? | Not started | - |
+| 1. Scaffold and Build | 0/1 | Planning done | - |
 | 2. Sensors and Console | 0/? | Not started | - |
 | 3. Motor Outputs | 0/? | Not started | - |
 | 4. GPS and Magnetometer | 0/? | Not started | - |
@@ -118,3 +121,4 @@
 
 ---
 *Roadmap created: 2026-03-10*
+*Phase 1 planned: 2026-03-10*
