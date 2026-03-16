@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (C) 2021 PX4 Development Team. All rights reserved.
+ *   Copyright (C) 2024 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,35 +31,37 @@
  *
  ****************************************************************************/
 
+/**
+ * @file spi.cpp
+ *
+ * ORQA H7 QuadCore SPI bus and device configuration
+ *
+ * SPI1: ICM42688P #1 (Gyro 1) - CS=PA4, DRDY=PC3
+ * SPI2: W25Q128FV Flash        - CS=PB12
+ * SPI3: MAX7456 OSD            - CS=PA15
+ * SPI4: ICM42688P #2 (Gyro 2) - CS=PE11, DRDY=PE10
+ */
+
 #include <px4_arch/spi_hw_description.h>
 #include <drivers/drv_sensor.h>
 #include <nuttx/spi/spi.h>
 
-
 constexpr px4_spi_bus_t px4_spi_buses[SPI_BUS_MAX_BUS_ITEMS] = {
+	/* SPI1 - IMU 1 (ICM42688P) */
 	initSPIBus(SPI::Bus::SPI1, {
-		// Matek H743 Slim V1.0 and V1.5
-		initSPIDevice(DRV_IMU_DEVTYPE_MPU6000, SPI::CS{GPIO::PortC, GPIO::Pin15}, SPI::DRDY{GPIO::PortB, GPIO::Pin2}),
-
-		// Matek H743 Slim V3
-		initSPIDevice(DRV_IMU_DEVTYPE_ICM42688P, SPI::CS{GPIO::PortC, GPIO::Pin15}, SPI::DRDY{GPIO::PortB, GPIO::Pin2}),
+		initSPIDevice(DRV_IMU_DEVTYPE_ICM42688P, SPI::CS{GPIO::PortA, GPIO::Pin4}, SPI::DRDY{GPIO::PortC, GPIO::Pin3}),
 	}),
+	/* SPI2 - Dataflash (W25Q128FV) */
 	initSPIBus(SPI::Bus::SPI2, {
-		initSPIDevice(DRV_OSD_DEVTYPE_ATXXXX, SPI::CS{GPIO::PortB, GPIO::Pin12}),
+		initSPIDevice(SPIDEV_FLASH(0), SPI::CS{GPIO::PortB, GPIO::Pin12}),
 	}),
-	initSPIBusExternal(SPI::Bus::SPI3, {
-		initSPIConfigExternal(SPI::CS{GPIO::PortD, GPIO::Pin4}),
-		initSPIConfigExternal(SPI::CS{GPIO::PortE, GPIO::Pin2}),
+	/* SPI3 - OSD (MAX7456) */
+	initSPIBus(SPI::Bus::SPI3, {
+		initSPIDevice(DRV_OSD_DEVTYPE_ATXXXX, SPI::CS{GPIO::PortA, GPIO::Pin15}),
 	}),
+	/* SPI4 - IMU 2 (ICM42688P) */
 	initSPIBus(SPI::Bus::SPI4, {
-		// Matek H743 Slim V1.0
-		initSPIDevice(DRV_IMU_DEVTYPE_ICM20602, SPI::CS{GPIO::PortE, GPIO::Pin11}),
-
-		// Matek H743 Slim V1.5
-		initSPIDevice(DRV_IMU_DEVTYPE_ICM42605, SPI::CS{GPIO::PortC, GPIO::Pin13}),
-
-		// Matek H743 Slim V3
-		initSPIDevice(DRV_IMU_DEVTYPE_ICM42688P, SPI::CS{GPIO::PortC, GPIO::Pin13}),
+		initSPIDevice(DRV_IMU_DEVTYPE_ICM42688P, SPI::CS{GPIO::PortE, GPIO::Pin11}, SPI::DRDY{GPIO::PortE, GPIO::Pin10}),
 	}),
 };
 

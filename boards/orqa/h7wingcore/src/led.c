@@ -34,7 +34,7 @@
 /**
  * @file led.c
  *
- * ORQA H7 QuadCore LED driver
+ * ORQA H7 Wingcore LED driver
  *
  * LED 0 (RED):   PA8
  * LED 1 (GREEN): PA10

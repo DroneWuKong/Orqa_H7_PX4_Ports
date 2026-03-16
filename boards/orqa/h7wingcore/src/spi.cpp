@@ -32,17 +32,37 @@
  ****************************************************************************/
 
 /**
- * @file i2c.cpp
+ * @file spi.cpp
  *
- * ORQA H7 QuadCore I2C bus configuration
+ * ORQA H7 Wingcore SPI bus and device configuration
  *
- * I2C1: PB6/PB7  - External (Magnetometer QMC5883, Dashboard)
- * I2C2: PB10/PB11 - Internal (DPS310 Barometer @ 0x77)
+ * SPI1: ICM42688P #1 (Gyro 1) - CS=PA4, DRDY=PC3
+ * SPI2: W25Q128FV Flash        - CS=PB12
+ * SPI3: MAX7456 OSD            - CS=PA15
+ * SPI4: ICM42688P #2 (Gyro 2) - CS=PE11, DRDY=PE10
  */
 
-#include <px4_arch/i2c_hw_description.h>
+#include <px4_arch/spi_hw_description.h>
+#include <drivers/drv_sensor.h>
+#include <nuttx/spi/spi.h>
 
-constexpr px4_i2c_bus_t px4_i2c_buses[I2C_BUS_MAX_BUS_ITEMS] = {
-	initI2CBusExternal(1),
-	initI2CBusInternal(2),
+constexpr px4_spi_bus_t px4_spi_buses[SPI_BUS_MAX_BUS_ITEMS] = {
+	/* SPI1 - IMU 1 (ICM42688P) */
+	initSPIBus(SPI::Bus::SPI1, {
+		initSPIDevice(DRV_IMU_DEVTYPE_ICM42688P, SPI::CS{GPIO::PortA, GPIO::Pin4}, SPI::DRDY{GPIO::PortC, GPIO::Pin3}),
+	}),
+	/* SPI2 - Dataflash (W25Q128FV) */
+	initSPIBus(SPI::Bus::SPI2, {
+		initSPIDevice(SPIDEV_FLASH(0), SPI::CS{GPIO::PortB, GPIO::Pin12}),
+	}),
+	/* SPI3 - OSD (MAX7456) */
+	initSPIBus(SPI::Bus::SPI3, {
+		initSPIDevice(DRV_OSD_DEVTYPE_ATXXXX, SPI::CS{GPIO::PortA, GPIO::Pin15}),
+	}),
+	/* SPI4 - IMU 2 (ICM42688P) */
+	initSPIBus(SPI::Bus::SPI4, {
+		initSPIDevice(DRV_IMU_DEVTYPE_ICM42688P, SPI::CS{GPIO::PortE, GPIO::Pin11}, SPI::DRDY{GPIO::PortE, GPIO::Pin10}),
+	}),
 };
+
+static constexpr bool unused = validateSPIConfig(px4_spi_buses);

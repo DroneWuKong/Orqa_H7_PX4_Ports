@@ -34,7 +34,7 @@
 /**
  * @file board_config.h
  *
- * ORQA H7 QuadCore internal definitions
+ * ORQA H7 Wingcore internal definitions
  *
  * Pin mapping cross-validated from:
  *   - Betaflight 4.4.1 ORQAH7QuadCore unified config
@@ -62,7 +62,7 @@
 #define BOARD_HAS_NBAT_V              1
 #define BOARD_HAS_NBAT_I              1
 
-/* ORQA H7 QuadCore GPIOs ***********************************************************************/
+/* ORQA H7 Wingcore GPIOs ***********************************************************************/
 
 /* LEDs - Active LOW (accent LEDs on PA8, PA10, PD11) */
 

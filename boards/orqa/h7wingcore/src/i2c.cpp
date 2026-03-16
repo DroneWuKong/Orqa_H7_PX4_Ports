@@ -34,7 +34,7 @@
 /**
  * @file i2c.cpp
  *
- * ORQA H7 QuadCore I2C bus configuration
+ * ORQA H7 Wingcore I2C bus configuration
  *
  * I2C1: PB6/PB7  - External (Magnetometer QMC5883, Dashboard)
  * I2C2: PB10/PB11 - Internal (DPS310 Barometer @ 0x77)

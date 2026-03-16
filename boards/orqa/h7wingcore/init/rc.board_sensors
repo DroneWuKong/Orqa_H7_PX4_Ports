@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# ORQA H7 QuadCore specific board sensors init
+# ORQA H7 Wingcore specific board sensors init
 #------------------------------------------------------------------------------
 board_adc start
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# ORQA H7 QuadCore board specific defaults
+# ORQA H7 Wingcore board specific defaults
 #------------------------------------------------------------------------------
 
 # Transition from params file to flash-based params
@@ -14,27 +14,30 @@ then
 fi
 
 # Battery voltage divider: 10K + 1.2K network
-# BF: vbat_scale=112, div=1, mult=12 => effective ratio ~11.0
 param set-default BAT1_V_DIV 11.0
-# BF: ibata_scale=108 => ~92.6 A/V (typical for this class)
 param set-default BAT1_A_PER_V 92.6
 
 # system_power unavailable
 param set-default CBRK_SUPPLY_CHK 894281
 
-# Select Generic Quadrotor X by default
-param set-default SYS_AUTOSTART 4001
+# Select Generic Fixed Wing by default
+param set-default SYS_AUTOSTART 2100
 
-# Magnetometer on I2C1 - external probing enabled
+# Magnetometer on I2C1
 param set-default SYS_HAS_MAG 1
 
 # Enable gravity fusion for EKF2
 param set-default EKF2_IMU_CTRL 7
 
-# Buzzer is inverted logic, active output
+# Buzzer
 param set-default CBRK_BUZZER 0
 
 param set-default IMU_GYRO_RATEMAX 2000
 
-# DShot by default
+# Fixed-wing servo assignments on PWM9/PWM10
+# 201=Aileron, 202=Elevator
+param set-default PWM_MAIN_FUNC9 201
+param set-default PWM_MAIN_FUNC10 202
+
+# DShot for motor outputs
 param set-default DSHOT_CONFIG 300

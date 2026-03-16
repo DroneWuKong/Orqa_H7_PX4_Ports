@@ -34,7 +34,7 @@
 /**
  * @file init.c
  *
- * ORQA H7 QuadCore specific early startup code.
+ * ORQA H7 Wingcore specific early startup code.
  */
 
 #include "board_config.h"

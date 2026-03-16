@@ -34,7 +34,7 @@
 /**
  * @file timer_config.cpp
  *
- * ORQA H7 QuadCore PWM output configuration
+ * ORQA H7 Wingcore PWM output configuration
  *
  * Motor outputs (DSHOT-capable, bidirectional):
  *   PWM1: PD12 TIM4_CH1   (MOTOR 1)

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# ORQA H7 QuadCore specific board extras init
+# ORQA H7 Wingcore specific board extras init
 #------------------------------------------------------------------------------
 
 # MAX7456 OSD on SPI3
