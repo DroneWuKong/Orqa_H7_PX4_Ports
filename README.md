@@ -200,12 +200,20 @@ make orqa_h7wingcore_default    # fixed-wing
 | PWM9 | PE6 | TIM15 | CH2 | Servo 1 (Aileron on Wingcore) |
 | PWM10 | PE5 | TIM15 | CH1 | Servo 2 (Elevator on Wingcore) |
 
-### IMU Rotations
+### IMU Rotations (Verified)
 
-| IMU | BF Rotation | ArduPilot Rotation | PX4 Rotation |
-|-----|-------------|-------------------|--------------|
-| Gyro 1 (SPI1) | CW270 | ROLL_180_YAW_270 | ROTATION_ROLL_180_YAW_270 (R6) |
-| Gyro 2 (SPI4) | CW180 | PITCH_180 | ROTATION_PITCH_180 (R12) |
+Rotations were derived from the PCB layout, ICM-42688-P datasheet axis diagram, and cross-validated against Betaflight and ArduPilot configs. See [`boards/orqa/h7quadcore/docs/`](boards/orqa/h7quadcore/docs/) for PCB layout images.
+
+| IMU | Mount | BF Rotation | ArduPilot Rotation | PX4 Rotation |
+|-----|-------|-------------|-------------------|--------------|
+| Gyro 1 (SPI1) | Bottom-mounted | CW270 | ROLL_180_YAW_270 | ROTATION_ROLL_180_YAW_270 (R6) |
+| Gyro 2 (SPI4) | Bottom-mounted | CW180 | PITCH_180 | ROTATION_PITCH_180 (R12) |
+
+**Gyro 1 derivation:** PCB layout shows Pin 6 (INT1/GYRO_1_EXTI) at the top-left of the footprint. In the datasheet, Pin 6 is left-side mid-bottom, confirming the chip is physically rotated. ArduPilot's `ROLL_180` component indicates Z-axis inversion (bottom-mount), `YAW_270` gives the in-plane rotation.
+
+**Gyro 2 derivation:** PCB layout shows Pin 1 (MISO) at top-left and Pin 4 (GYRO_2_EXTI) at bottom-left. ArduPilot's `PITCH_180` indicates 180° flip about the Y-axis (bottom-mount with different orientation than Gyro 1).
+
+> **Note:** The Gyro 2 PCB footprint labels its nets as "SPI3_*" but the schematic and all firmware configs (BF, ArduPilot) map it to SPI4 (PE11-PE14). This is a PCB tool labeling artifact — the schematic is authoritative.
 
 ### Other
 
