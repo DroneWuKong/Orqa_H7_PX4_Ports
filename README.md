@@ -23,11 +23,12 @@ The QuadCore and Wingcore are **the same PCB**. PX4 handles quad vs fixed-wing a
 | CAN | FDCAN1 — RX=PB8, TX=PB9 |
 | Motors | 8 outputs: TIM4(PD12/PD13), TIM2(PA1/PA0), TIM5(PA2/PA3), TIM3(PB1/PB0) |
 | Servos | 2 outputs: TIM15(PE6/PE5) |
-| Board ID | QuadCore=1099, Wingcore=1100 (development IDs) |
+| Board ID | 1013 (matches ORQA official PX4 fork) |
 
 ### Pin Map Sources
 
-Pin assignments were cross-validated from three independent sources:
+Pin assignments were cross-validated from four independent sources:
+- **ORQA official PX4 fork** — [`orqafpv/PX4-Autopilot` develop_h743-3030-pro branch](https://github.com/orqafpv/PX4-Autopilot/tree/develop_h743-3030-pro)
 - **Betaflight 4.4.1** ORQAH7QuadCore unified target config
 - **ArduPilot** OrqaH7QuadCore hwdef.dat (mainline)
 - **Hardware schematic** (STM32H743VIH6 — IC8A/IC8B/IC8C)
@@ -202,18 +203,16 @@ make orqa_h7wingcore_default    # fixed-wing
 
 ### IMU Rotations (Verified)
 
-Rotations were derived from the PCB layout, ICM-42688-P datasheet axis diagram, and cross-validated against Betaflight and ArduPilot configs. See [`boards/orqa/h7quadcore/docs/`](boards/orqa/h7quadcore/docs/) for PCB layout images.
+Rotations verified from PCB layout analysis, physical measurement, and cross-referenced against [ORQA's official PX4 fork](https://github.com/orqafpv/PX4-Autopilot/tree/develop_h743-3030-pro). See [`boards/orqa/h7quadcore/docs/`](boards/orqa/h7quadcore/docs/) for PCB layout images.
 
-| IMU | Mount | BF Rotation | ArduPilot Rotation | PX4 Rotation |
-|-----|-------|-------------|-------------------|--------------|
-| Gyro 1 (SPI1) | Bottom-mounted | CW270 | ROLL_180_YAW_270 | ROTATION_ROLL_180_YAW_270 (R6) |
-| Gyro 2 (SPI4) | Bottom-mounted | CW180 | PITCH_180 | ROTATION_PITCH_180 (R12) |
+| IMU | Bus | Mount | Physical | PX4 Rotation |
+|-----|-----|-------|----------|--------------|
+| MPU6000 / ICM42688P | SPI1 | Bottom | 180° CW to face forward | ROTATION_PITCH_180 (R12) |
+| ICM42688P | SPI4 | Bottom | 90° CCW to face forward | ROTATION_ROLL_180_YAW_90 (R14) |
 
-**Gyro 1 derivation:** PCB layout shows Pin 6 (INT1/GYRO_1_EXTI) at the top-left of the footprint. In the datasheet, Pin 6 is left-side mid-bottom, confirming the chip is physically rotated. ArduPilot's `ROLL_180` component indicates Z-axis inversion (bottom-mount), `YAW_270` gives the in-plane rotation.
+> **Note:** SPI1 carries an MPU6000 on v1.1 boards and ICM42688P on later revisions. The sensor init script tries MPU6000 first, then falls back to ICM42688P. Both use the same rotation (R12).
 
-**Gyro 2 derivation:** PCB layout shows Pin 1 (MISO) at top-left and Pin 4 (GYRO_2_EXTI) at bottom-left. ArduPilot's `PITCH_180` indicates 180° flip about the Y-axis (bottom-mount with different orientation than Gyro 1).
-
-> **Note:** The Gyro 2 PCB footprint labels its nets as "SPI3_*" but the schematic and all firmware configs (BF, ArduPilot) map it to SPI4 (PE11-PE14). This is a PCB tool labeling artifact — the schematic is authoritative.
+> **Note:** The Gyro 2 PCB footprint labels its nets as "SPI3_*" but the schematic and all firmware configs map it to SPI4 (PE11-PE14). This is a PCB tool labeling artifact.
 
 ### Other
 
@@ -269,7 +268,14 @@ ORQA_PIN_REQUEST.md          Historical — pin request (now resolved)
 
 ## Board Template
 
-Based on the **Holybro KakuteH7** PX4 board definition (same STM32H743, same 8 MHz HSE, same 480 MHz clock tree). The KakuteH7 dual-IMU variant was used as the reference for dual ICM42688P configuration.
+Based on **ORQA's official PX4 fork** ([`orqafpv/PX4-Autopilot` develop_h743-3030-pro](https://github.com/orqafpv/PX4-Autopilot/tree/develop_h743-3030-pro)) and the **Holybro KakuteH7** PX4 board definition (same STM32H743, same 8 MHz HSE, same 480 MHz clock tree).
+
+Key differences from the ORQA official fork:
+- Added Wingcore fixed-wing variant with servo defaults
+- SPI1 probes both MPU6000 (v1.1) and ICM42688P (later revisions)
+- Added PCB layout documentation for IMU rotation verification
+
+> **CAN bus warning:** As of Feb 2025, enabling CAN bus in PX4 disables all Timer5 outputs (motors 3-6). This is a known PX4 bug documented in the ORQA official fork.
 
 ---
 

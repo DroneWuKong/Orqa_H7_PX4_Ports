@@ -1,16 +1,28 @@
 #!/bin/sh
 #
-# ORQA H7 QuadCore specific board sensors init
+# ORQA H7 board specific sensors init
+# Rotations verified from PCB layout + ORQA official PX4 fork
 #------------------------------------------------------------------------------
 board_adc start
 
-# IMU 1 on SPI1 - ICM42688P
-# BF rotation CW270 = ArduPilot ROLL_180_YAW_270 = PX4 ROTATION_ROLL_180_YAW_270 (R6)
-icm42688p -R 6 -s start
+# IMU 1 on SPI1 — MPU6000 (v1.1 board) or ICM42688P (later revs)
+# Physical: 180° CW to face forward, bottom-mounted
+# PX4: ROTATION_PITCH_180 (R12)
+mpu6000 -R 12 -b 1 -s start
+if [ $? -ne 0 ]; then
+	icm42688p -R 12 -b 1 -s start
+fi
 
-# IMU 2 on SPI4 - ICM42688P
-# BF rotation CW180 = ArduPilot PITCH_180 = PX4 ROTATION_PITCH_180 (R12)
-icm42688p -R 12 -S start
+# IMU 2 on SPI4 — ICM42688P
+# Physical: 90° CCW to face forward, bottom-mounted
+# PX4: ROTATION_ROLL_180_YAW_90 (R14)
+icm42688p -R 14 -b 4 -s start
 
-# Barometer - DPS310 on I2C2 @ 0x77
-dps310 -I -a 0x77 start
+# Barometer — DPS310 on I2C2 @ 0x77 (119 decimal)
+dps310 -I start -a 119
+
+# Magnetometer — QMC5883 on I2C1 @ 0x0D (13 decimal)
+qmc5883l -X start -a 13
+
+# GPS on UART7
+gps start -d /dev/ttyS2 -p ubx

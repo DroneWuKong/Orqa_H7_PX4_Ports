@@ -14,7 +14,7 @@ then
 fi
 
 # Battery voltage divider: 10K + 1.2K network
-param set-default BAT1_V_DIV 11.0
+param set-default BAT1_V_DIV 9.2931
 param set-default BAT1_A_PER_V 92.6
 
 # system_power unavailable

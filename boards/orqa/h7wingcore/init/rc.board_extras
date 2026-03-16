@@ -1,13 +1,10 @@
 #!/bin/sh
 #
-# ORQA H7 Wingcore specific board extras init
+# board specific extras init
 #------------------------------------------------------------------------------
 
-# MAX7456 OSD on SPI3
-if ! param compare OSD_ATXXXX_CFG 0
-then
-	atxxxx start -s
-fi
+# OSD
+atxxxx start -s
 
-# DShot telemetry on UART8 (RX only, PE0)
-dshot telemetry -d /dev/ttyS3
+# DShot telemetry
+dshot telemetry /dev/ttyS3
