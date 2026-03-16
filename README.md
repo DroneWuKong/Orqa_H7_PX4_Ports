@@ -59,7 +59,7 @@ Pin assignments were cross-validated from four independent sources:
 ## What Needs Hardware Validation
 
 - [ ] Flash and boot on actual ORQA H7 hardware
-- [ ] Verify IMU rotation values match physical orientation
+- [x] Verify IMU rotation values match physical orientation
 - [ ] Confirm UART ttyS mapping under NuttX serial reordering
 - [ ] DShot ESC communication on motor outputs
 - [ ] QGroundControl connection and parameter storage
