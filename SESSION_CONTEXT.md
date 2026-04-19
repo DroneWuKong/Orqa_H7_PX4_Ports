@@ -150,3 +150,27 @@ make orqa_h7quadcore_default    # quad
 make orqa_h7wingcore_default    # fixed-wing
 make orqa_h7quadcore_bootloader # bootloader
 ```
+
+---
+
+## Update: April 19 2026 — CAN Node OSD Architecture
+
+OSD-1 resolved: no spare SPI bus on H743 (SPI1=IMU, SPI2=Flash, SPI3=OSD, SPI4=IMU).
+
+**Chosen architecture: STM32G0B1 CAN node**
+- Taps FDCAN1 bus (PB8/PB9) in BUS_MONITORING (silent) mode
+- Listens for DroneCAN Fix2 + NodeStatus — never transmits, zero bus impact
+- Timer5/CAN PX4 bug is irrelevant — PX4 keeps FDCAN1 disabled, node hangs
+  off the physical bus passively
+- Node is SPI master to H503 via a NEW second CS line (CS2, free H503 GPIO)
+- H743 keeps CS1=PA15 for standard MAX7456 OSD — no sharing, no mutex
+- Full spec: DroneWuKong/1G-FDMA osd/can-node-spec.md
+
+**SPI3 pin confirmation (cross-validated):**
+- board.h comment "SPI2 is OSD" is a copy-paste error from reference board
+- spi.cpp is correct: SPI3, CS=PA15
+- PROJECT_CONTEXT confirms: SCK=PB03, MISO=PB04, MOSI=PD06, CS=PA15
+
+**Open questions for hardware phase (add to Phase 3 checklist):**
+- CAN-3: Free GPIO on H503 for CS2?
+- CAN-5: DroneCAN baud rate — 1 Mbps or 500 kbps?
