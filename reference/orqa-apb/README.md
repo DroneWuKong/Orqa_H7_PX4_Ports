@@ -137,3 +137,26 @@ Known SOC-side gotcha (not a PX4 concern, but relevant to bring-up): an
 imx-sdma RX-DMA boot race can leave the SOC's ttymxc2 RX dead on cold boot
 (`mavlink-router-rxdma-recover.{sh,service}` restarts the router when the
 signature appears).
+
+## AP_HW_ORQAAPB = 1189 — CONFIRMED (2026-07-02, MRM2-10 AI factory hex)
+
+Extracted from `arducopter4.5_with_bl_MRM2-10_AI_v1.1.hex` (the factory
+ArduCopter+bootloader image for the APB-based MRM2-10 AI platform):
+
+- Bootloader `board_info` struct @ flash **0x08004970** =
+  `{board_type=1189 (0x4A5), board_rev=0, fw_size=0x1A0000}`.
+- Same image carries the literal string **"ORQAAPB"**, "ArduCopter V4.5.7
+  (07d727a0)", and USB descriptors **0x35b6:0x0090** (the APB PID) — so 1189
+  is unambiguously `AP_HW_ORQAAPB`, not a sibling board.
+- App linked at **0x08060000** (384 KB), consistent with the hwdef-bl.
+
+`boards/orqa/apb` now uses BOARD_TYPE / board_id **1189** (was provisionally
+1185). This is the id the factory APB bootloader validates uploads against,
+so PX4 `.px4` images built with it will be accepted by the on-board
+ArduCopter/ArduPilot bootloader. Resolves open question APB-1.
+
+Provenance note: Orqa's private id cluster is now fully mapped — 1185
+(H743Wing arduplane), 1188 (OrqaH7QuadCore, orqafpv fork branch), 1189
+(ORQAAPB). None collide with each other; 1185/1188/1189 do overlap unrelated
+mainline ArduPilot ids (X-MAV etc.), which is expected for a vendor-private
+allocation and harmless as long as PX4 matches the factory bootloader.
