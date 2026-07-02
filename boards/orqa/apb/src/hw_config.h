@@ -22,18 +22,16 @@
 #define BOARD_VBUS                     MK_GPIO_INPUT(GPIO_OTGFS_VBUS)
 
 #define BOOT_DELAY_ADDRESS             0x000001a0
-/* AP_HW_ORQAAPB exists only in Orqa's internal tree; its numeric value is
- * unconfirmed. Known Orqa-private allocations: 1185 = H743Wing factory
- * bootloader (extracted from arduplane_with_bl_v1.1.hex board_info @
- * 0x08009560), 1188 = OrqaH7QuadCore on the public orqafpv/ardupilot
- * h7quadcore branch (same hwdef-bl lineage and USB PID 0x0090 as the APB
- * file). 1185 is used provisionally; the definitive value comes from the
- * factory arducopter4.5_with_bl_MRM2-10_AI_v1.1.hex bootloader (see
- * reference/orqa-apb/README.md) or Orqa directly. If the factory
- * bootloader rejects an upload with a board-id mismatch, update this and
- * firmware.prototype together.
+/* AP_HW_ORQAAPB = 1189, CONFIRMED from the factory
+ * arducopter4.5_with_bl_MRM2-10_AI_v1.1.hex bootloader: board_info struct
+ * @ 0x08004970 = {board_type=1189 (0x4A5), rev=0, fw_size=0x1A0000}, in an
+ * image that also carries the literal "ORQAAPB" string, ArduCopter V4.5.7,
+ * and USB 0x35b6:0x0090 (the APB PID). This is the value the factory APB
+ * bootloader checks an upload's board id against. (Related Orqa-private
+ * allocations seen elsewhere: 1185 = H743Wing arduplane factory bl,
+ * 1188 = OrqaH7QuadCore on the orqafpv/ardupilot h7quadcore branch.)
  */
-#define BOARD_TYPE                     1185
+#define BOARD_TYPE                     1189
 /* App region: sectors 3..14 (0x08060000..0x081E0000, 1536 KB).
  * Sector 15 is reserved for flash-based params (APP_RESERVATION_SIZE). */
 #define BOARD_FLASH_SECTORS            (12)
