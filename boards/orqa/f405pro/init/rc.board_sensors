@@ -1,0 +1,20 @@
+#!/bin/sh
+#
+# Orqa F405 Pro specific board sensors init
+# Pins from ardupilot OrqaF405Pro hwdef + betaflight ORQA-F405-PRO config.
+#------------------------------------------------------------------------------
+
+board_adc start
+
+# IMU on SPI1 (CS=PA4) — MPU6000 (betaflight config) or ICM42688P (later revs)
+# Rotations from ArduPilot hwdef (re-verify on hardware)
+if ! mpu6000 -R 2 -s start
+then
+	icm42688p -R 12 -s start
+fi
+
+# Barometer — DPS310 on I2C1 @ 0x77 (119)
+dps310 -I -b 1 -a 119 start
+
+# No built-in mag; probe external QMC5883 on I2C1
+qmc5883l -X -b 1 start

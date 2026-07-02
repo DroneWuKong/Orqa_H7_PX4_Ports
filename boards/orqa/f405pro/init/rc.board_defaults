@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+# Orqa F405 Pro board specific defaults
+#------------------------------------------------------------------------------
+
+# system_power unavailable
+param set-default CBRK_SUPPLY_CHK 894281
+param set-default CBRK_IO_SAFETY 22027
+
+# Battery: ArduPilot hwdef VOLT_SCALE 8.3, CURR_SCALE 92.6
+param set-default BAT1_V_DIV 8.3
+param set-default BAT1_A_PER_V 92.6
+param set-default BAT1_N_CELLS 4
+
+# Generic Quadrotor X
+param set-default SYS_AUTOSTART 4001
+
+# External mag probing
+param set-default SYS_HAS_MAG 1
+
+# Ghost RC on USART1
+param set-default RC_GHST_PRT_CFG 300
+
+# DShot by default
+param set-default DSHOT_CONFIG 300
