@@ -112,3 +112,28 @@ into `boards/orqa/apb`:
   of this port's old value), app @ 0x08020000, `image_maxsize` 1920K,
   summary "OrqaH743", USB CDCACM `0x35b6:0x0090` (matches our target).
   We intentionally diverge on id/layout (1185-provisional @ 0x08060000).
+
+## Companion UART — CONFIRMED (2026-07-02, Ai-Project apb/deploy)
+
+The FC↔SOC MAVLink link is fully pinned down from two independent files in
+`DroneWuKong/Ai-Project` (`apb/deploy/`):
+
+- `mavlink-router.conf`: `[UartEndpoint fc] Device=/dev/ttymxc2 Baud=230400`
+  — SOC side is i.MX8M Plus **UART3** (`/dev/ttymxc2`), bridged to
+  `udp://127.0.0.1:14540` (wingman-apb) and `:14541` (wingman-vio).
+- `configs/orqa_mrm2_10f_arducopter.param`: `SERIAL4_PROTOCOL=2` (MAVLink2),
+  `SERIAL4_BAUD=230` with the inline note "matches APB mavlink-router
+  /dev/ttymxc2". SERIAL1=SiK/RFD 57600, SERIAL2=GPS, SERIAL3=GHST RC.
+- `deploy/gpio-uart-fc.sh`: the SOC UART3 is behind a GPIO mux —
+  gpiochip3 line 13 (UART3_SEL_FC=1) + line 0 (UART3_FC_EN=0) route it to
+  the H743. Asserted by mavlink-router.service ExecStartPre.
+
+**Baud is 230400, field-confirmed. 921600 caused FC link loss after
+reflashes** (noted in both mavlink-router.conf and the param file). The PX4
+APB target sets `SER_TEL1_BAUD 230400` on TEL1 (FC UART4, PC10/PC11)
+accordingly. This resolves open question APB-2.
+
+Known SOC-side gotcha (not a PX4 concern, but relevant to bring-up): an
+imx-sdma RX-DMA boot race can leave the SOC's ttymxc2 RX dead on cold boot
+(`mavlink-router-rxdma-recover.{sh,service}` restarts the router when the
+signature appears).
