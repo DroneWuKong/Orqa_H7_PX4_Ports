@@ -212,3 +212,19 @@ Analysis preserved in `reference/orqa-apb/README.md`.
 - APB-3: verify IMU rotations on APB (assumed same PCB orientation).
 - APB-4: confirm PX4 fw via factory bootloader end-to-end (protocol OK,
   board-id gate is the only expected blocker).
+
+### Addendum (same session): orqafpv/ardupilot fork analysis
+- Mainline + fork master OrqaH7QuadCore hwdef-bl: id 1204, fw @ 384 KB.
+- Fork h7quadcore branch: same hwdef-bl with USB 0x35b6:0x0090, id 1188 —
+  the uploaded APB hwdef-bl is this file with the id symbol renamed to
+  AP_HW_ORQAAPB (numeric unconfirmed; candidates 1185/1188/nearby).
+- **Layout unified:** quadcore/wingcore moved from 0x08020000 to
+  0x08060000 (1536 KB app) to match every Orqa AP bootloader. Removes the
+  hazard of a 1204 mainline AP bootloader accepting a 0x08020000-linked
+  image and writing it to 384 KB (silent no-boot). PX4 fw now flashes
+  through mainline AP bootloaders with no DFU step.
+- APB companion defaults: MAV_0_CONFIG=101 / MAV_0_MODE=2 / MAV_0_RATE=0
+  per the AI Wingman deploy guide (bridge at udp://127.0.0.1:14540).
+- Definitive AP_HW_ORQAAPB extraction: run the snippet in
+  reference/orqa-apb/README.md against arducopter4.5_with_bl_MRM2-10_AI_v1.1.hex
+  (AI Wingman drive) or upload that hex to a session.

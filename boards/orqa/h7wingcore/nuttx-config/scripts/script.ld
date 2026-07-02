@@ -110,7 +110,10 @@
 MEMORY
 {
 	ITCM_RAM  (rwx) : ORIGIN = 0x00000000, LENGTH =   64K
-	FLASH      (rx) : ORIGIN = 0x08020000, LENGTH = 1792K /* params in last sector */
+	/* ArduPilot-compatible layout: bootloader owns sectors 0-2 (384K, matches
+	 * mainline OrqaH7QuadCore FLASH_BOOTLOADER_LOAD_KB 384), app in sectors
+	 * 3-14, params in sector 15 (0x081E0000). */
+	FLASH      (rx) : ORIGIN = 0x08060000, LENGTH = 1536K
 
 	DTCM1_RAM (rwx) : ORIGIN = 0x20000000, LENGTH =   64K
 	DTCM2_RAM (rwx) : ORIGIN = 0x20010000, LENGTH =   64K

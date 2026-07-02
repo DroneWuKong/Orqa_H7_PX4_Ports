@@ -64,3 +64,21 @@ Facts extracted from the factory image supplied with the standalone H7 FC:
   In the ArduPlane Wing image this prints `board_type=1185`; whatever it
   prints for the MRM2-10 AI image is the value to put in
   `boards/orqa/apb/firmware.prototype` + `src/hw_config.h`.
+
+## orqafpv/ardupilot fork findings (2026-07-02, user-provided link)
+
+- **master** `OrqaH7QuadCore/hwdef-bl.dat`: `APJ_BOARD_ID AP_HW_ORQAH7QUADCORE`
+  (= **1204** in the registry), `FLASH_BOOTLOADER_LOAD_KB 384`, no custom USB
+  IDs. Mirrors mainline ArduPilot.
+- **h7quadcore branch** `OrqaH7QuadCore/hwdef-bl.dat`: same file with
+  `USB 0x35b6:0x0090 "Orqa"` and `AP_HW_ORQAH7QUADCORE = 1188` in that
+  branch's board_types.txt. This is the direct lineage of the APB hwdef-bl
+  in this directory — identical except the board-id symbol was changed to
+  `AP_HW_ORQAAPB` (numeric value not present in any public tree).
+- Orqa-private id cluster so far: 1185 (H743Wing factory bl), 1188
+  (h7quadcore branch); `AP_HW_ORQAAPB` is likely nearby but unconfirmed.
+- Consequence adopted in this repo: since mainline AP's OrqaH7QuadCore
+  bootloader is 1204 @ 384 KB, ALL PX4 targets here now link at 0x08060000
+  (1536 KB app, params in sector 15) so a matching-id image can never be
+  placed at the wrong address by an AP bootloader, and quadcore/wingcore
+  PX4 firmware flashes directly through a mainline AP bootloader.

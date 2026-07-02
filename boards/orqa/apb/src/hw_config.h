@@ -22,11 +22,14 @@
 #define BOARD_VBUS                     MK_GPIO_INPUT(GPIO_OTGFS_VBUS)
 
 #define BOOT_DELAY_ADDRESS             0x000001a0
-/* 1185 extracted from the factory v1.1 bootloader board_info struct
- * (arduplane_with_bl_v1.1.hex @ 0x08009560: type=0x4A1, rev=0,
- * fw_size=0x1A0000). Orqa allocated this privately (mainline
- * board_types.txt now assigns 1185 to X-MAV-AP-F405Mini); the exact
- * AP_HW_ORQAAPB value is pending confirmation from Orqa. If the factory
+/* AP_HW_ORQAAPB exists only in Orqa's internal tree; its numeric value is
+ * unconfirmed. Known Orqa-private allocations: 1185 = H743Wing factory
+ * bootloader (extracted from arduplane_with_bl_v1.1.hex board_info @
+ * 0x08009560), 1188 = OrqaH7QuadCore on the public orqafpv/ardupilot
+ * h7quadcore branch (same hwdef-bl lineage and USB PID 0x0090 as the APB
+ * file). 1185 is used provisionally; the definitive value comes from the
+ * factory arducopter4.5_with_bl_MRM2-10_AI_v1.1.hex bootloader (see
+ * reference/orqa-apb/README.md) or Orqa directly. If the factory
  * bootloader rejects an upload with a board-id mismatch, update this and
  * firmware.prototype together.
  */

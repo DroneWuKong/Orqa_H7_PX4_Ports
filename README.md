@@ -3,7 +3,7 @@
 PX4 flight controller firmware port for the **Orqa H7 QuadCore**, **Orqa H7 Wingcore**, and the FC side of the **Orqa DTK APB** (all STM32H743VIH6, 8 MHz HSE).
 
 > **Status: Phase 2 Complete — Full board definition with all sensors, motors, servos, and peripherals configured. Ready for hardware validation.**
-> **2026-07-02:** Added the `orqa_apb` target (factory-bootloader-compatible layout), moved quadcore/wingcore to the registered board ID **1204** (`AP_HW_ORQAH7QUADCORE`), and switched USB identity to Orqa's real VID `0x35b6`. See [Orqa DTK APB variant](#orqa-dtk-apb-variant).
+> **2026-07-02:** Added the `orqa_apb` target, moved quadcore/wingcore to the registered board ID **1204** (`AP_HW_ORQAH7QUADCORE`), switched USB identity to Orqa's real VID `0x35b6`, and unified **all targets on the ArduPilot-compatible 384 KB flash layout** (app at `0x08060000`) — mainline ArduPilot's OrqaH7QuadCore bootloader uses ID 1204 with firmware at 384 KB, so PX4 now flashes through it directly. See [Orqa DTK APB variant](#orqa-dtk-apb-variant).
 
 ---
 
@@ -175,22 +175,32 @@ Differences from the quadcore/wingcore targets:
 
 | Item | QuadCore / Wingcore | DTK APB |
 |------|--------------------|---------|
-| App load address | `0x08020000` (PX4 bootloader, sector 0) | `0x08060000` (factory ArduPilot bootloader, sectors 0-2) |
-| Max firmware size | 1792 KB | 1536 KB |
-| Board ID | 1204 (registered) | 1185 (provisional — extracted from factory bootloader; `AP_HW_ORQAAPB` pending Orqa confirmation) |
+| Board ID | 1204 (registered, matches mainline AP bootloader) | 1185 (provisional — `AP_HW_ORQAAPB` is Orqa-internal; candidates 1185/1188, see `reference/orqa-apb/`) |
 | USB PID | `0x35b6:0x0091` | `0x35b6:0x0090` |
 | IMU probe order (SPI1) | MPU6000 → ICM42688P | ICM42605 → ICM42688P → MPU6000 |
-| Flashing | DFU-install PX4 bootloader, then QGC | Flash `.px4` directly through the **factory** bootloader (same serial protocol); DFU replacement optional |
-| Companion link | — | SOC ↔ FC via internal CAN + GPIO-switched UART (FC-side UART TBD; see `rc.board_defaults`) |
+| Companion link | — | SOC ↔ FC internal bridge; `MAV_0` defaults to ONBOARD (see `rc.board_defaults`) |
 
-Params live in flash sector 15 (`0x081E0000`) on all three targets.
+**All three targets share the ArduPilot-compatible flash layout:** bootloader
+in sectors 0-2 (384 KB, matching `FLASH_BOOTLOADER_LOAD_KB 384` in every Orqa
+ArduPilot hwdef-bl), app at `0x08060000` (1536 KB max), params in sector 15
+(`0x081E0000`).
 
-**Flashing the APB:** the factory ArduPilot bootloader speaks the same
-serial flashing protocol as the PX4 bootloader, so QGC / `px_uploader.py`
-can load `orqa_apb_default.px4` through it without touching the bootloader —
-provided the board ID matches. If the upload is rejected with a board-id
-mismatch, the reported ID in the error is the true `AP_HW_ORQAAPB` value:
-fix `boards/orqa/apb/firmware.prototype` + `src/hw_config.h` and rebuild.
+**Flashing:** ArduPilot bootloaders speak the same serial flashing protocol
+as the PX4 bootloader, so QGC / `px_uploader.py` can load a `.px4` through
+the ArduPilot bootloader already on the board — no bootloader replacement —
+provided the board ID matches:
+
+- **Mainline AP bootloader** (OrqaH7QuadCore, ID 1204): flashes the
+  quadcore/wingcore targets directly.
+- **Old factory bootloaders** (Orqa-private IDs — 1185 on the v1.1 Wing
+  image, 1188 on the orqafpv `h7quadcore` branch): refuse with a board-id
+  mismatch; the ID printed in the error is the installed bootloader's true
+  value. Either DFU-install a current bootloader (mainline AP or the PX4
+  one from this repo) or rebuild with that ID.
+- **APB**: `orqa_apb_default.px4` targets the factory APB bootloader; if it
+  rejects with a mismatch, that reported ID is the true `AP_HW_ORQAAPB` —
+  fix `boards/orqa/apb/firmware.prototype` + `src/hw_config.h` and rebuild.
+
 Recovery is always available via STM32 system DFU (`0x0483:0xdf11`, hold
 BOOT), and the factory bootloader also exposes DFU reboot (`ENABLE_DFU_BOOT`).
 

@@ -10,7 +10,11 @@
 #define SERIAL0_DEV    0x02
 #define SERIAL1_DEV    0x04
 
-#define APP_LOAD_ADDRESS               0x08020000
+/* 384 KB bootloader reservation, matching mainline ArduPilot's
+ * OrqaH7QuadCore hwdef-bl (FLASH_BOOTLOADER_LOAD_KB 384). With the same
+ * board id (1204) and load address, PX4 firmware flashes correctly through
+ * either this PX4 bootloader or a mainline ArduPilot bootloader. */
+#define APP_LOAD_ADDRESS               0x08060000
 #define BOOTLOADER_DELAY               3000
 #define INTERFACE_USB                  1
 #define INTERFACE_USB_CONFIG           "/dev/ttyACM0"
@@ -18,14 +22,19 @@
 
 #define BOOT_DELAY_ADDRESS             0x000001a0
 /* 1204 = AP_HW_ORQAH7QUADCORE, registered in the shared board-id registry
- * (ArduPilot Tools/AP_Bootloader/board_types.txt). The previous value 1013
- * collided with AP_HW_MATEKH743. Note: the FACTORY Orqa ArduPilot
- * bootloader reports id 1185 (extracted from arduplane_with_bl_v1.1.hex),
- * so PX4 images flash via THIS bootloader (DFU-installed), not the
- * factory one. */
+ * and used by mainline ArduPilot's OrqaH7QuadCore bootloader (which also
+ * loads firmware at 384 KB) — so PX4 images flash through either this PX4
+ * bootloader or a mainline AP bootloader. The previous value 1013 collided
+ * with AP_HW_MATEKH743. Old FACTORY bootloaders report Orqa-private ids
+ * (1185 in arduplane_with_bl_v1.1.hex, 1188 on the orqafpv/ardupilot
+ * h7quadcore branch) and will refuse this image with an id mismatch —
+ * DFU-install a current bootloader in that case. */
 #define BOARD_TYPE                     1204
-#define BOARD_FLASH_SECTORS            (14)
+/* App region: sectors 3..14 (0x08060000..0x081E0000, 1536 KB).
+ * Sector 15 is reserved for flash-based params (APP_RESERVATION_SIZE). */
+#define BOARD_FLASH_SECTORS            (12)
 #define BOARD_FLASH_SIZE               (16 * 128 * 1024)
+#define BOARD_FIRST_FLASH_SECTOR_TO_ERASE 3
 #define APP_RESERVATION_SIZE           (1 * 128 * 1024)
 
 #define OSC_FREQ                       8
