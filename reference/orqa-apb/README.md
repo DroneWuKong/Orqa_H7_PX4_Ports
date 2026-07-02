@@ -28,3 +28,39 @@ Facts extracted from the factory image supplied with the standalone H7 FC:
   from Orqa. If the factory bootloader rejects an upload with a board-id
   mismatch, correct `boards/orqa/apb/firmware.prototype` and
   `boards/orqa/apb/src/hw_config.h` together.
+
+## AI Wingman drive findings (2026-07-02)
+
+- The Drive copy of `hwdef-bl.dat` is byte-identical to the one in this
+  directory — no newer revision exists there.
+- `wingman-apb-deploy-guide-v2` (Drive): the companion-side wingman service
+  reads the FC over the APB's internal bridge at `udp://127.0.0.1:14540`
+  and requires `MAV_0_MODE=2` (ONBOARD) + `MAV_0_RATE=0` on PX4. These are
+  now board defaults in `boards/orqa/apb/init/rc.board_defaults`.
+- `arducopter4.5_with_bl_MRM2-10_AI_v1.1.hex` (Drive, 5.2 MB, private):
+  factory ArduCopter+bootloader image for the MRM2-10 AI (APB-based
+  platform). Its bootloader should carry the true `AP_HW_ORQAAPB` board ID
+  (expected USB PID 0x0090). Too large to pull through the Drive API in a
+  session; extract locally with:
+
+      python3 - arducopter4.5_with_bl_MRM2-10_AI_v1.1.hex <<'PY'
+      import struct, sys
+      data, base = {}, 0
+      for line in open(sys.argv[1]):
+          if not line.startswith(':'): continue
+          b = bytes.fromhex(line.strip()[1:])
+          if b[3] == 4: base = ((b[4]<<8)|b[5]) << 16
+          elif b[3] == 0:
+              for i, v in enumerate(b[4:4+b[0]]): data[base+((b[1]<<8)|b[2])+i] = v
+      img = bytearray(b'\xff'*(max(data)-0x08000000+1))
+      for a, v in data.items(): img[a-0x08000000] = v
+      # board_info struct: board_type(u32), 0, fw_size(u32) — fw_size = 0x1A0000
+      for off in range(0, 0x60000-12, 4):
+          t, r, f = struct.unpack_from('<III', img, off)
+          if f == 0x1A0000 and r == 0 and 0 < t < 65536:
+              print(f"board_type={t} at flash 0x{0x08000000+off:08x}")
+      PY
+
+  In the ArduPlane Wing image this prints `board_type=1185`; whatever it
+  prints for the MRM2-10 AI image is the value to put in
+  `boards/orqa/apb/firmware.prototype` + `src/hw_config.h`.

@@ -46,13 +46,16 @@ param set-default IMU_GYRO_RATEMAX 2000
 param set-default DSHOT_CONFIG 300
 
 # --- APB companion link ---------------------------------------------------
-# The i.MX8M Plus SOC on the APB reaches this FC over an internal CAN bus
-# (CAN2 on the SOC side -> FDCAN1 here) and a GPIO-switched UART (SOC UART3
-# routes to CSI1/CSI2/FC). The FC-side UART for the SOC link is not yet
-# confirmed on hardware. Once identified, enable an offboard MAVLink
-# instance on it, e.g.:
-#   param set-default MAV_1_CONFIG 101   # TEL1 (/dev/ttyS1, USART6)
-#   param set-default MAV_1_MODE 2       # Onboard
-#   param set-default SER_TEL1_BAUD 921600
+# The i.MX8M Plus SOC on the APB reaches this FC over an internal bridge
+# (plus CAN: SOC CAN2 -> FDCAN1 here, and a GPIO-switched UART: SOC UART3
+# routes to CSI1/CSI2/FC). The AI Wingman APB deploy guide (wingman-apb
+# v0.1) consumes the bridge at udp://127.0.0.1:14540 on the companion and
+# requires PX4's primary MAVLink instance in ONBOARD mode at max rate —
+# set as board defaults here so a fresh flash feeds the companion:
+param set-default MAV_0_CONFIG 101   # TEL1 (/dev/ttyS1, USART6)
+param set-default MAV_0_MODE 2       # Onboard
+param set-default MAV_0_RATE 0       # Max rate (HIGHRES_IMU up to 250 Hz)
+# FC-side UART of the bridge assumed TEL1/USART6 (deploy guide configures
+# MAV_0 only); verify on hardware, along with the bridge baud rate.
 # WARNING (known PX4 bug, Feb 2025): enabling UAVCAN/FDCAN1 kills all
 # Timer5 outputs (motors 3-6). Leave UAVCAN_ENABLE=0 until fixed upstream.
