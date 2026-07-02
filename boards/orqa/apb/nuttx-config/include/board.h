@@ -354,8 +354,11 @@
 #define GPIO_USART3_RX   GPIO_USART3_RX_3   /* PD9  */
 #define GPIO_USART3_TX   GPIO_USART3_TX_3   /* PD8  */
 
-#define GPIO_UART4_RX    GPIO_UART4_RX_5    /* PD0 */
-#define GPIO_UART4_TX    GPIO_UART4_TX_5    /* PD1 */
+/* UART4 is the internal bridge to the i.MX8M Plus companion ("IMX" in
+ * ORQA's official APB board.h). The inherited PD0/PD1 variant collided
+ * with CAM_SW. */
+#define GPIO_UART4_RX    GPIO_UART4_RX_4    /* PC11 */
+#define GPIO_UART4_TX    GPIO_UART4_TX_4    /* PC10 */
 
 #define GPIO_USART6_RX   GPIO_USART6_RX_1   /* PC7  */
 #define GPIO_USART6_TX   GPIO_USART6_TX_1   /* PC6 */
@@ -364,9 +367,15 @@
 #define GPIO_UART7_TX    GPIO_UART7_TX_3    /* PE8 */
 
 /* SPI
- * SPI1 SD Card
- * SPI2 is OSD AT7456E
- * SPI4 is IMU
+ * SPI1 is IMU1 (MPU6000 / ICM42688P)
+ * SPI2 is FLASH (W25Q128FV)
+ * SPI3 is OSD (MAX7456)
+ * SPI4 is IMU2 (ICM42605 / ICM42688P)
+ *
+ * SPI3/SPI4 pin variants verified against the NuttX stm32h7x3xx pinmap and
+ * ORQA's official PX4 fork (orqafpv/PX4-Autopilot develop_APB-initial):
+ * the previous SPI4 _2 variants (PE2/PE5/PE6) collided with VBUS sensing
+ * and the TIM15 servo pins, and SPI3 had no pin defines at all.
  */
 
 #define GPIO_SPI1_MISO   GPIO_SPI1_MISO_1   /* PA6 */
@@ -377,9 +386,13 @@
 #define GPIO_SPI2_MOSI   GPIO_SPI2_MOSI_1   /* PB15 */
 #define GPIO_SPI2_SCK    GPIO_SPI2_SCK_4    /* PB13 */
 
-#define GPIO_SPI4_MISO   GPIO_SPI4_MISO_2   /* PE5 */
-#define GPIO_SPI4_MOSI   GPIO_SPI4_MOSI_2   /* PE6 */
-#define GPIO_SPI4_SCK    GPIO_SPI4_SCK_2    /* PE2 */
+#define GPIO_SPI3_MISO   GPIO_SPI3_MISO_1   /* PB4 */
+#define GPIO_SPI3_MOSI   GPIO_SPI3_MOSI_1   /* PD6 */
+#define GPIO_SPI3_SCK    GPIO_SPI3_SCK_1    /* PB3 */
+
+#define GPIO_SPI4_MISO   GPIO_SPI4_MISO_1   /* PE13 */
+#define GPIO_SPI4_MOSI   GPIO_SPI4_MOSI_1   /* PE14 */
+#define GPIO_SPI4_SCK    GPIO_SPI4_SCK_1    /* PE12 */
 
 /* I2C
  */
@@ -390,18 +403,28 @@
 #define GPIO_I2C1_SCL_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN |GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTB | GPIO_PIN6)
 #define GPIO_I2C1_SDA_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN |GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTB | GPIO_PIN7)
 
-/* SDMMC1
+/* SDMMC2 (per ORQA's official APB target — SDMMC1 is impossible here
+ * because UART4 (IMX bridge) owns PC10/PC11 = SDMMC1_D2/D3).
  *
- *      VDD 3.3
- *      GND
- *      SDMMC1_CK                           PC12
- *      SDMMC1_CMD                          PD2
- *      SDMMC1_D0                           PC8
- *      SDMMC1_D1                           PC9
- *      SDMMC1_D2                           PC10
- *      SDMMC1_D3                           PC11
- *      GPIO_SDMMC1_NCD                     PG0
+ * WARNING (carried over from orqafpv develop_APB-initial, unvalidated on
+ * hardware): these SDMMC2 pin picks overlap other configured peripherals —
+ * D0/D1 (PB14/PB15) = SPI2 dataflash pins, D2/D3 (PB3/PB4) = SPI3 OSD
+ * pins, CK (PC1) = battery-current ADC. On real APB hardware determine
+ * which peripherals the FC actually exposes and disable the dead ones.
  */
+#define GPIO_SDMMC2_D0_0          (GPIO_ALT|GPIO_AF9|GPIO_PUSHPULL|GPIO_PORTB|GPIO_PIN14)
+#define GPIO_SDMMC2_D1_0          (GPIO_ALT|GPIO_AF9|GPIO_PUSHPULL|GPIO_PORTB|GPIO_PIN15)
+#define GPIO_SDMMC2_D2_2          (GPIO_ALT|GPIO_AF9|GPIO_PUSHPULL|GPIO_PORTB|GPIO_PIN3)
+#define GPIO_SDMMC2_D3_0          (GPIO_ALT|GPIO_AF9|GPIO_PUSHPULL|GPIO_PORTB|GPIO_PIN4)
+#define GPIO_SDMMC2_CK_2          (GPIO_ALT|GPIO_AF9|GPIO_PORTC|GPIO_PIN1)
+#define GPIO_SDMMC2_CMD_1         (GPIO_ALT|GPIO_AF11|GPIO_PUSHPULL|GPIO_PULLUP|GPIO_PORTD|GPIO_PIN7)
+
+#define GPIO_SDMMC2_D0   GPIO_SDMMC2_D0_0
+#define GPIO_SDMMC2_D1   GPIO_SDMMC2_D1_0
+#define GPIO_SDMMC2_D2   GPIO_SDMMC2_D2_2
+#define GPIO_SDMMC2_D3   GPIO_SDMMC2_D3_0
+#define GPIO_SDMMC2_CK   GPIO_SDMMC2_CK_2
+#define GPIO_SDMMC2_CMD  GPIO_SDMMC2_CMD_1
 
 /* USB
  *

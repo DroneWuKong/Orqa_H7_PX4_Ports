@@ -228,3 +228,15 @@ Analysis preserved in `reference/orqa-apb/README.md`.
 - Definitive AP_HW_ORQAAPB extraction: run the snippet in
   reference/orqa-apb/README.md against arducopter4.5_with_bl_MRM2-10_AI_v1.1.hex
   (AI Wingman drive) or upload that hex to a session.
+
+### Addendum 2 (same session): orqafpv/PX4-Autopilot analysis
+- Branch develop_APB-initial = ORQA's own PX4 APB target. Adopted: UART4
+  (PC10/PC11) = IMX bridge as TEL1 @ 115200; serial remap (GPS ttyS3, ESC
+  telem ttyS4, USART6 = TEL2/SiK); SDMMC2 (with pin-overlap warnings);
+  SPI4 ICM42605 R12 / ICM42688P R14 probe matrix; MAV_1 on TEL2 57600.
+- Fixed latent bugs in ALL targets found via their board.h: SPI4 pin
+  variants were PE2/PE5/PE6 (VBUS + servo collisions) → PE12/PE13/PE14;
+  SPI3 (OSD) pin defines were missing entirely (SPI3 enabled in defconfig
+  → likely did not compile; "Phase 1 compiles" claim needs re-verification).
+- Their PX4 APB identity: id 1013 @ 0x08020000 (origin of our old 1013).
+  We stay on 1185-provisional @ 0x08060000 (AP-bootloader compatible).

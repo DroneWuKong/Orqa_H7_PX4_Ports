@@ -364,9 +364,15 @@
 #define GPIO_UART7_TX    GPIO_UART7_TX_3    /* PE8 */
 
 /* SPI
- * SPI1 SD Card
- * SPI2 is OSD AT7456E
- * SPI4 is IMU
+ * SPI1 is IMU1 (MPU6000 / ICM42688P)
+ * SPI2 is FLASH (W25Q128FV)
+ * SPI3 is OSD (MAX7456)
+ * SPI4 is IMU2 (ICM42605 / ICM42688P)
+ *
+ * SPI3/SPI4 pin variants verified against the NuttX stm32h7x3xx pinmap and
+ * ORQA's official PX4 fork (orqafpv/PX4-Autopilot develop_APB-initial):
+ * the previous SPI4 _2 variants (PE2/PE5/PE6) collided with VBUS sensing
+ * and the TIM15 servo pins, and SPI3 had no pin defines at all.
  */
 
 #define GPIO_SPI1_MISO   GPIO_SPI1_MISO_1   /* PA6 */
@@ -377,9 +383,13 @@
 #define GPIO_SPI2_MOSI   GPIO_SPI2_MOSI_1   /* PB15 */
 #define GPIO_SPI2_SCK    GPIO_SPI2_SCK_4    /* PB13 */
 
-#define GPIO_SPI4_MISO   GPIO_SPI4_MISO_2   /* PE5 */
-#define GPIO_SPI4_MOSI   GPIO_SPI4_MOSI_2   /* PE6 */
-#define GPIO_SPI4_SCK    GPIO_SPI4_SCK_2    /* PE2 */
+#define GPIO_SPI3_MISO   GPIO_SPI3_MISO_1   /* PB4 */
+#define GPIO_SPI3_MOSI   GPIO_SPI3_MOSI_1   /* PD6 */
+#define GPIO_SPI3_SCK    GPIO_SPI3_SCK_1    /* PB3 */
+
+#define GPIO_SPI4_MISO   GPIO_SPI4_MISO_1   /* PE13 */
+#define GPIO_SPI4_MOSI   GPIO_SPI4_MOSI_1   /* PE14 */
+#define GPIO_SPI4_SCK    GPIO_SPI4_SCK_1    /* PE12 */
 
 /* I2C
  */

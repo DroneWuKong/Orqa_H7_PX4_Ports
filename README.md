@@ -176,9 +176,18 @@ Differences from the quadcore/wingcore targets:
 | Item | QuadCore / Wingcore | DTK APB |
 |------|--------------------|---------|
 | Board ID | 1204 (registered, matches mainline AP bootloader) | 1185 (provisional — `AP_HW_ORQAAPB` is Orqa-internal; candidates 1185/1188, see `reference/orqa-apb/`) |
-| USB PID | `0x35b6:0x0091` | `0x35b6:0x0090` |
-| IMU probe order (SPI1) | MPU6000 → ICM42688P | ICM42605 → ICM42688P → MPU6000 |
-| Companion link | — | SOC ↔ FC internal bridge; `MAV_0` defaults to ONBOARD (see `rc.board_defaults`) |
+| USB PID | `0x35b6:0x0091` | `0x35b6:0x0090` (matches ORQA's official PX4 APB target) |
+| IMU probing | SPI1: MPU6000 → ICM42688P (R12); SPI4: ICM42688P (R14) | SPI1: MPU6000 → ICM42688P (R12); SPI4: ICM42605 (R12) → ICM42688P (R14) |
+| SD card | SDMMC1 (PC8-PC12/PD2) | SDMMC2 (UART4 owns PC10/PC11; pin overlaps flagged in `board.h`) |
+| Companion link | — | **UART4 (PC10/PC11) = TEL1 @ 115200** to the i.MX8M Plus; `MAV_0` defaults to ONBOARD |
+| Serial map (ttyS0…) | USART3 RC, USART6 TEL1, UART7 GPS, UART8 ESC | USART3 RC, UART4 TEL1 (IMX), USART6 TEL2 (SiK/gimbal), UART7 GPS, UART8 ESC (TEL3) |
+
+APB serial/sensor configuration is aligned with **ORQA's official PX4 APB
+target** ([`orqafpv/PX4-Autopilot` branch `develop_APB-initial`](https://github.com/orqafpv/PX4-Autopilot/tree/develop_APB-initial),
+`boards/orqa/h743-APB`), which also confirmed the UART4 "IMX" bridge pins
+and the ICM42605-on-SPI4 rotation. That branch keeps the classic PX4 flash
+layout (`0x08020000`, board ID 1013 — the Matek collision this port fixes);
+we intentionally diverge to the AP-compatible layout + registered IDs below.
 
 **All three targets share the ArduPilot-compatible flash layout:** bootloader
 in sectors 0-2 (384 KB, matching `FLASH_BOOTLOADER_LOAD_KB 384` in every Orqa

@@ -82,3 +82,33 @@ Facts extracted from the factory image supplied with the standalone H7 FC:
   (1536 KB app, params in sector 15) so a matching-id image can never be
   placed at the wrong address by an AP bootloader, and quadcore/wingcore
   PX4 firmware flashes directly through a mainline AP bootloader.
+
+## orqafpv/PX4-Autopilot fork findings (2026-07-02, user-provided link)
+
+Branch **`develop_APB-initial`** contains ORQA's own PX4 APB target
+(`boards/orqa/h743-APB`, plus `h743-3030-pro`). Authoritative deltas adopted
+into `boards/orqa/apb`:
+
+- **UART4 (PC10/PC11, `GPIO_UART4_*_4`) is the i.MX8M Plus bridge** —
+  commented "IMX" in their board.h; TEL1=/dev/ttyS1 @ 115200
+  (`SER_TEL1_BAUD 115200` in their defaults). Serial roles: USART3 RC,
+  UART4 TEL1/IMX, USART6 TEL2 (SiK/gimbal, console), UART7 GPS (ttyS3),
+  UART8 ESC telem (ttyS4).
+- **SDMMC2 instead of SDMMC1** (UART4 owns SDMMC1's D2/D3 pins). Their
+  SDMMC2 pin picks overlap SPI2 dataflash (PB14/PB15), SPI3 OSD (PB3/PB4),
+  and the PC1 current ADC — inconsistencies of an "initial" branch;
+  carried over verbatim with a warning comment pending hardware truth.
+- **Sensors**: SPI1 MPU6000 R12 (their fallback mpu6500 has no driver
+  enabled; we fall back to ICM42688P R12 per QuadCore rev history);
+  SPI4 ICM42605 **R12** / ICM42688P **R14** (rotation differs per chip).
+- **SPI pin fixes for ALL targets**: their board.h exposed two latent bugs
+  in our QuadCore-derived board.h — SPI4 used `_2` variants
+  (PE2/PE5/PE6, colliding with VBUS + TIM15 servos) instead of `_1`
+  (PE12/PE13/PE14), and SPI3 (OSD) had no pin defines at all. Verified
+  against the NuttX stm32h7x3xx pinmap; note their `/* PB5 */` comment on
+  `GPIO_SPI3_MOSI_1` is wrong — the token resolves to **PD6** (matching
+  this repo's cross-validated pin notes).
+- Their PX4 identity: board id **1013** (the Matek H743 collision — origin
+  of this port's old value), app @ 0x08020000, `image_maxsize` 1920K,
+  summary "OrqaH743", USB CDCACM `0x35b6:0x0090` (matches our target).
+  We intentionally diverge on id/layout (1185-provisional @ 0x08060000).

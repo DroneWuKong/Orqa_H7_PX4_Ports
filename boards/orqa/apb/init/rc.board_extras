@@ -7,4 +7,4 @@
 atxxxx start -s
 
 # DShot telemetry
-dshot telemetry /dev/ttyS3
+dshot telemetry /dev/ttyS4
