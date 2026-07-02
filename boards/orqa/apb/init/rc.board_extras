@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# board specific extras init
+#------------------------------------------------------------------------------
+
+# OSD
+atxxxx start -s
+
+# DShot telemetry
+dshot telemetry /dev/ttyS4

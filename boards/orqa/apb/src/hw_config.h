@@ -1,5 +1,5 @@
 /**
- * hw_config.h - ORQA H7 QuadCore bootloader configuration
+ * hw_config.h - ORQA DTK APB (STM32H743 FC) bootloader configuration
  */
 
 #ifndef HW_CONFIG_H_
@@ -10,10 +10,11 @@
 #define SERIAL0_DEV    0x02
 #define SERIAL1_DEV    0x04
 
-/* 384 KB bootloader reservation, matching mainline ArduPilot's
- * OrqaH7QuadCore hwdef-bl (FLASH_BOOTLOADER_LOAD_KB 384). With the same
- * board id (1204) and load address, PX4 firmware flashes correctly through
- * either this PX4 bootloader or a mainline ArduPilot bootloader. */
+/* The APB ships with Orqa's ArduPilot bootloader in sectors 0-2 (384 KB,
+ * per the factory hwdef-bl: FLASH_BOOTLOADER_LOAD_KB 384). The app is
+ * linked at 0x08060000 so the same image flashes through either the
+ * factory bootloader or this PX4 bootloader.
+ */
 #define APP_LOAD_ADDRESS               0x08060000
 #define BOOTLOADER_DELAY               3000
 #define INTERFACE_USB                  1
@@ -21,15 +22,18 @@
 #define BOARD_VBUS                     MK_GPIO_INPUT(GPIO_OTGFS_VBUS)
 
 #define BOOT_DELAY_ADDRESS             0x000001a0
-/* 1204 = AP_HW_ORQAH7QUADCORE, registered in the shared board-id registry
- * and used by mainline ArduPilot's OrqaH7QuadCore bootloader (which also
- * loads firmware at 384 KB) — so PX4 images flash through either this PX4
- * bootloader or a mainline AP bootloader. The previous value 1013 collided
- * with AP_HW_MATEKH743. Old FACTORY bootloaders report Orqa-private ids
- * (1185 in arduplane_with_bl_v1.1.hex, 1188 on the orqafpv/ardupilot
- * h7quadcore branch) and will refuse this image with an id mismatch —
- * DFU-install a current bootloader in that case. */
-#define BOARD_TYPE                     1204
+/* AP_HW_ORQAAPB exists only in Orqa's internal tree; its numeric value is
+ * unconfirmed. Known Orqa-private allocations: 1185 = H743Wing factory
+ * bootloader (extracted from arduplane_with_bl_v1.1.hex board_info @
+ * 0x08009560), 1188 = OrqaH7QuadCore on the public orqafpv/ardupilot
+ * h7quadcore branch (same hwdef-bl lineage and USB PID 0x0090 as the APB
+ * file). 1185 is used provisionally; the definitive value comes from the
+ * factory arducopter4.5_with_bl_MRM2-10_AI_v1.1.hex bootloader (see
+ * reference/orqa-apb/README.md) or Orqa directly. If the factory
+ * bootloader rejects an upload with a board-id mismatch, update this and
+ * firmware.prototype together.
+ */
+#define BOARD_TYPE                     1185
 /* App region: sectors 3..14 (0x08060000..0x081E0000, 1536 KB).
  * Sector 15 is reserved for flash-based params (APP_RESERVATION_SIZE). */
 #define BOARD_FLASH_SECTORS            (12)

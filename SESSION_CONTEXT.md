@@ -174,3 +174,100 @@ OSD-1 resolved: no spare SPI bus on H743 (SPI1=IMU, SPI2=Flash, SPI3=OSD, SPI4=I
 **Open questions for hardware phase (add to Phase 3 checklist):**
 - CAN-3: Free GPIO on H503 for CS2?
 - CAN-5: DroneCAN baud rate — 1 Mbps or 500 kbps?
+
+---
+
+## Update: July 2 2026 — DTK APB target + board-ID corrections
+
+New inputs this session: Orqa's APB bootloader hwdef (`AP_HW_ORQAAPB`, USB
+`0x35b6:0x0090`, fw @ 384 KB) and the factory `arduplane_with_bl_v1.1.hex`.
+Analysis preserved in `reference/orqa-apb/README.md`.
+
+**Forensics from the factory image:**
+- Bootloader board_info @ 0x08009560: **board_type=1185**, fw_size=0x1A0000.
+  1185 is an Orqa-private allocation — mainline now assigns it to X-MAV.
+- App = "OrqaH743Wing" ArduPlane V4.5.7, USB `0x35b6:0x0091` (bl + app).
+- Mainline ArduPilot has registered **AP_HW_ORQAH7QUADCORE = 1204**.
+- Our old board ID 1013 actually belongs to **AP_HW_MATEKH743** (the "ORQA
+  official fork" value was a Matek collision) — fixed.
+
+**Changes:**
+- New `boards/orqa/apb/` target (`orqa_apb_default` / `orqa_apb_bootloader`):
+  app linked @ **0x08060000** so it flashes straight through the factory
+  ArduPilot bootloader; 1536 KB app region, params still in sector 15;
+  board ID **1185 provisional** (real `AP_HW_ORQAAPB` value pending Orqa —
+  user has a direct line, see Ai-Project udev-rules note); USB
+  `0x35b6:0x0090` "PX4 ORQA APB"; SPI1 IMU probe order ICM42605 →
+  ICM42688P → MPU6000 (APB spec sheet says ICM42605); IMU rotations carried
+  over from QuadCore, re-verify on APB hardware; companion-link (SOC CAN2 +
+  GPIO-switched UART3) notes in `rc.board_defaults`, MAVLink instance left
+  disabled until the FC-side UART is confirmed.
+- quadcore/wingcore: board ID 1013 → **1204**; USB 0x3162:0x0050 (Holybro
+  VID leftover from KakuteH7) → **0x35b6:0x0091** (factory Orqa identity).
+
+**Open hardware questions (add to Phase 3):**
+- APB-1: true `AP_HW_ORQAAPB` numeric board ID (ask Orqa; or read the
+  rejected-upload error from the factory bootloader).
+- APB-2: FC-side UART wired to the SOC UART3 switch.
+- APB-3: verify IMU rotations on APB (assumed same PCB orientation).
+- APB-4: confirm PX4 fw via factory bootloader end-to-end (protocol OK,
+  board-id gate is the only expected blocker).
+
+### Addendum (same session): orqafpv/ardupilot fork analysis
+- Mainline + fork master OrqaH7QuadCore hwdef-bl: id 1204, fw @ 384 KB.
+- Fork h7quadcore branch: same hwdef-bl with USB 0x35b6:0x0090, id 1188 —
+  the uploaded APB hwdef-bl is this file with the id symbol renamed to
+  AP_HW_ORQAAPB (numeric unconfirmed; candidates 1185/1188/nearby).
+- **Layout unified:** quadcore/wingcore moved from 0x08020000 to
+  0x08060000 (1536 KB app) to match every Orqa AP bootloader. Removes the
+  hazard of a 1204 mainline AP bootloader accepting a 0x08020000-linked
+  image and writing it to 384 KB (silent no-boot). PX4 fw now flashes
+  through mainline AP bootloaders with no DFU step.
+- APB companion defaults: MAV_0_CONFIG=101 / MAV_0_MODE=2 / MAV_0_RATE=0
+  per the AI Wingman deploy guide (bridge at udp://127.0.0.1:14540).
+- Definitive AP_HW_ORQAAPB extraction: run the snippet in
+  reference/orqa-apb/README.md against arducopter4.5_with_bl_MRM2-10_AI_v1.1.hex
+  (AI Wingman drive) or upload that hex to a session.
+
+### Addendum 2 (same session): orqafpv/PX4-Autopilot analysis
+- Branch develop_APB-initial = ORQA's own PX4 APB target. Adopted: UART4
+  (PC10/PC11) = IMX bridge as TEL1 @ 115200; serial remap (GPS ttyS3, ESC
+  telem ttyS4, USART6 = TEL2/SiK); SDMMC2 (with pin-overlap warnings);
+  SPI4 ICM42605 R12 / ICM42688P R14 probe matrix; MAV_1 on TEL2 57600.
+- Fixed latent bugs in ALL targets found via their board.h: SPI4 pin
+  variants were PE2/PE5/PE6 (VBUS + servo collisions) → PE12/PE13/PE14;
+  SPI3 (OSD) pin defines were missing entirely (SPI3 enabled in defconfig
+  → likely did not compile; "Phase 1 compiles" claim needs re-verification).
+- Their PX4 APB identity: id 1013 @ 0x08020000 (origin of our old 1013).
+  We stay on 1185-provisional @ 0x08060000 (AP-bootloader compatible).
+
+### Addendum 3 (2026-07-02): actually compiled against PX4 v1.15.4 — all 6 targets GREEN
+Stood up the toolchain in-sandbox (arm-none-eabi-gcc 13.2 — note v1.15.4 pins
+9.3.1; ARM/xPack GCC downloads are egress-blocked so 13.2 was used, with a
+version-gated `-Wno-error` in cmake/px4_add_common_flags.cmake for the newer
+compiler only) and built every target from a clean v1.15.4 checkout.
+
+The port had NEVER compiled before. Real bugs found and fixed while getting to green:
+- Missing pin defines: I2C2 (baro bus), UART8 (ESC telem), CAN1 — NuttX wouldn't build.
+- SPI3 (OSD) had no pin defines; SPI4 pointed at PE2/PE5/PE6 (VBUS + servos) not PE12/13/14.
+- Post-1.15 module names (FW_MODE_MANAGER/FW_LATERAL_LONGITUDINAL_CONTROL → FW_POS_CONTROL); dropped bogus CONFIG_NUM_MISSION_ITMES_SUPPORTED.
+- NSH defconfigs missing the `# CONFIG_NSH_DISABLE_* is not set` block (PX4 hard-errors) and CONFIG_NSH_DISABLE_MOUNT=y.
+- timer_config.cpp block-comments broke PX4's actuator-metadata generator → converted to //.
+- FDCAN: removed CONFIG_STM32H7_FDCAN1 (NuttX SocketCAN); PX4 UAVCAN drives FDCAN1 directly.
+- Rebased all defconfigs on ORQA's official APB defconfig (correct RTC_DATETIME, MMCSD-less SD, etc.).
+
+Flash-budget decision: the 384 KB AP-compatible bootloader leaves a 1536 KB
+app partition; the full module set overflowed by 238 KB. Split to
+airframe-appropriate module sets (quad+APB multirotor, wingcore fixed-wing;
+wingcore keeps core MC controllers because v1.15 libs reference MPC_* params).
+
+Adversarial audit (workflow) then found 3 confirmed bugs, all fixed:
+1. SPI1 listed only MPU6000 devtype → ICM42688P fallback was dead code (all 3). Added the devtype (and ICM42605 on APB SPI4).
+2. APB TEL3 mapped to /dev/ttyS4 = UART8 = the DShot ESC-telem UART (RX-only) → removed the TEL3 BOARD_SERIAL line.
+3. **Bootloader fw_size bug**: PX4 hardcodes BOOTLOADER_RESERVATION_SIZE=128 KB, so with the app at 0x08060000 the bootloader computed fw_size=1792 KB and its erase/CRC loops ran 128 KB past the end of flash (bus-fault). Fixed by setting APP_RESERVATION_SIZE=384 KB → fw_size=1536 KB, scans stay in [0x08060000, 0x081E0000). A compile-only check never exercises this.
+
+Known gap (matches ORQA official, documented not fixed): microSD not wired
+(no CONFIG_MMCSD, sdio.c uncompiled).
+
+Final build sizes: quad 98.78%, wing 96.05%, APB 99.08% of the 1536 KB app
+(GCC 13; roomier under pinned GCC 9.3). Bootloaders 53 KB each.

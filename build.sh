@@ -9,6 +9,7 @@
 #   ./build.sh                          Build default app firmware (orqa_h7quadcore_default)
 #   ./build.sh orqa_h7quadcore_default  Same as above (explicit)
 #   ./build.sh orqa_h7quadcore_bootloader  Build PX4 NuttX bootloader
+#   ./build.sh orqa_apb_default            Build DTK APB FC firmware (app @ 0x08060000)
 #
 # Output artifacts:
 #   ../PX4-Autopilot/build/orqa_h7quadcore_default/orqa_h7quadcore_default.px4

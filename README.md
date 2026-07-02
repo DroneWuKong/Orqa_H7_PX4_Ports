@@ -1,8 +1,9 @@
-# PX4 Port — Orqa H7 QuadCore + Wingcore
+# PX4 Port — Orqa H7 QuadCore + Wingcore + DTK APB
 
-PX4 flight controller firmware port for the **Orqa H7 QuadCore** and **Orqa H7 Wingcore** (STM32H743VIH6, 8 MHz HSE).
+PX4 flight controller firmware port for the **Orqa H7 QuadCore**, **Orqa H7 Wingcore**, and the FC side of the **Orqa DTK APB** (all STM32H743VIH6, 8 MHz HSE).
 
 > **Status: Phase 2 Complete — Full board definition with all sensors, motors, servos, and peripherals configured. Ready for hardware validation.**
+> **2026-07-02:** Added the `orqa_apb` target, moved quadcore/wingcore to the registered board ID **1204** (`AP_HW_ORQAH7QUADCORE`), switched USB identity to Orqa's real VID `0x35b6`, and unified **all targets on the ArduPilot-compatible 384 KB flash layout** (app at `0x08060000`) — mainline ArduPilot's OrqaH7QuadCore bootloader uses ID 1204 with firmware at 384 KB, so PX4 now flashes through it directly. See [Orqa DTK APB variant](#orqa-dtk-apb-variant).
 
 ---
 
@@ -23,7 +24,8 @@ The QuadCore and Wingcore are **the same PCB**. PX4 handles quad vs fixed-wing a
 | CAN | FDCAN1 — RX=PB8, TX=PB9 |
 | Motors | 8 outputs: TIM4(PD12/PD13), TIM2(PA1/PA0), TIM5(PA2/PA3), TIM3(PB1/PB0) |
 | Servos | 2 outputs: TIM15(PE6/PE5) |
-| Board ID | 1013 (matches ORQA official PX4 fork) |
+| Board ID | 1204 (`AP_HW_ORQAH7QUADCORE`, registered in mainline `board_types.txt`) |
+| USB (PX4 firmware) | `0x35b6:0x0091` (Orqa VID; matches factory ArduPlane image) |
 
 ### Pin Map Sources
 
@@ -37,33 +39,71 @@ Pin assignments were cross-validated from four independent sources:
 
 ## What Works
 
-- [x] Firmware compiles against PX4
-- [x] Bootloader compiles
-- [x] Board target discoverable by PX4 build system
+All six targets **compile and link clean against PX4 v1.15.4** (verified this
+session — see [Build Verification](#build-verification)). Before this the port
+had never actually built; the first real compile surfaced a cascade of latent
+bugs (missing I2C2/UART8/CAN pin defines, SPI3/SPI4 pins pointing at the wrong
+pads, post-1.15 module names) — all now fixed.
+
+- [x] Firmware **compiles + links** against PX4 v1.15.4 (all 3 boards)
+- [x] Bootloader **compiles + links** (all 3 boards)
+- [x] Board targets discoverable by the PX4 build system
 - [x] Docker build wrapper (`build.sh`)
 - [x] Full GPIO pin map — all sensors, buses, and outputs configured
-- [x] Dual ICM42688P with correct rotations
+- [x] Dual IMU (SPI1 MPU6000/ICM42688P, SPI4 ICM42688P; APB SPI4 ICM42605/ICM42688P) with per-chip rotations, both devtypes registered per bus
 - [x] DPS310 barometer on I2C2
 - [x] QMC5883 magnetometer on I2C1
 - [x] MAX7456 OSD on SPI3
 - [x] W25Q128FV dataflash on SPI2
-- [x] 8 motor + 2 servo timer/DMA mapping
-- [x] CAN bus enabled (FDCAN1)
-- [x] SDMMC1 microSD support
+- [x] 8 motor + 2/3 servo timer/DMA mapping
+- [x] CAN bus (FDCAN1) pins defined for the PX4 UAVCAN driver
 - [x] 3 status LEDs (PA8/PA10/PD11)
 - [x] Buzzer on PE9 (TIM1_CH1)
 - [x] Battery voltage (PC0) and current (PC1) ADC
 - [x] Camera switch GPIO (PD0)
-- [x] Wingcore fixed-wing variant
+- [x] Wingcore fixed-wing variant; APB companion (i.MX8M Plus) MAVLink on UART4 @ 230400
+
+### Known gaps (not yet functional in firmware)
+
+- [ ] **microSD** — the SDMMC *peripheral* pins are defined, but the NuttX
+  MMC/SD upper layer (`CONFIG_MMCSD*`) is not enabled and `src/sdio.c` is not
+  compiled or called, so SD logging does **not** work. This matches ORQA's own
+  official PX4 port (same gap); wiring it up is future work.
+
+## Build Verification
+
+Built with `arm-none-eabi-gcc 13.2` against a clean PX4 **v1.15.4** checkout
+(the pinned toolchain is 9-2020-q2 / GCC 9.3.1; newer GCC produces slightly
+larger code, so the FLASH figures below are an upper bound):
+
+| Target | Artifact | FLASH used (of 1536 KB app) |
+|--------|----------|------------------------------|
+| `orqa_h7quadcore_default`    | 1.45 MB `.px4` | 98.78% |
+| `orqa_h7quadcore_bootloader` | 53 KB `.px4`   | (sector 0) |
+| `orqa_h7wingcore_default`    | 1.42 MB `.px4` | 96.05% |
+| `orqa_h7wingcore_bootloader` | 53 KB `.px4`   | (sector 0) |
+| `orqa_apb_default`           | 1.45 MB `.px4` | 99.08% |
+| `orqa_apb_bootloader`        | 53 KB `.px4`   | (sector 0) |
+
+The 1536 KB app partition (a consequence of the 384 KB ArduPilot-compatible
+bootloader reservation) does not fit PX4's full "everything" module set, so
+each target carries an **airframe-appropriate** selection: quadcore + APB are
+multirotor (`SYS_AUTOSTART 4001`), wingcore is fixed-wing (`SYS_AUTOSTART
+2100`, with the core MC controllers kept because PX4 v1.15 libraries reference
+their parameters). Optional payload/legacy modules (SIH sim, gyro-FFT, DDS,
+landing-target, and on wingcore the camera/gimbal/smart-battery drivers) are
+trimmed to fit. FLASH is tight under GCC 13 — the pinned GCC 9.3 leaves more
+headroom.
 
 ## What Needs Hardware Validation
 
 - [ ] Flash and boot on actual ORQA H7 hardware
 - [x] Verify IMU rotation values match physical orientation
-- [ ] Confirm UART ttyS mapping under NuttX serial reordering
+- [x] UART ttyS mapping derived (reordering disabled; APB companion link = UART4/TEL1 @ 230400, confirmed from Ai-Project mavlink-router.conf + ArduPilot params) — still to be checked on hardware
 - [ ] DShot ESC communication on motor outputs
 - [ ] QGroundControl connection and parameter storage
 - [ ] Flight test (quad and fixed-wing)
+- [ ] Wire up microSD (MMCSD upper layer + `sdio.c`) if SD logging is needed
 
 ---
 
@@ -75,6 +115,8 @@ Pin assignments were cross-validated from four independent sources:
 | QuadCore bootloader | `make orqa_h7quadcore_bootloader` | Bootloader |
 | Wingcore firmware | `make orqa_h7wingcore_default` | Fixed-wing |
 | Wingcore bootloader | `make orqa_h7wingcore_bootloader` | Bootloader |
+| DTK APB FC firmware | `make orqa_apb_default` | APB integrated FC (app @ 0x08060000) |
+| DTK APB PX4 bootloader | `make orqa_apb_bootloader` | Optional factory-bootloader replacement |
 
 ---
 
@@ -159,6 +201,56 @@ make orqa_h7wingcore_default    # fixed-wing
 
 ---
 
+## Orqa DTK APB variant
+
+The **Orqa DTK APB** is a single-board flight computer: this same STM32H743 FC
+circuit plus an NXP i.MX8M Plus companion SOC (4×A53 + M7, 2.25 TOPS NPU,
+H.265 encode, dual MIPI-CSI). The `boards/orqa/apb` target covers the FC side.
+See [`reference/orqa-apb/README.md`](reference/orqa-apb/README.md) for the
+factory hwdef-bl and firmware-image analysis behind these values.
+
+Differences from the quadcore/wingcore targets:
+
+| Item | QuadCore / Wingcore | DTK APB |
+|------|--------------------|---------|
+| Board ID | 1204 (registered, matches mainline AP bootloader) | 1185 (provisional — `AP_HW_ORQAAPB` is Orqa-internal; candidates 1185/1188, see `reference/orqa-apb/`) |
+| USB PID | `0x35b6:0x0091` | `0x35b6:0x0090` (matches ORQA's official PX4 APB target) |
+| IMU probing | SPI1: MPU6000 → ICM42688P (R12); SPI4: ICM42688P (R14) | SPI1: MPU6000 → ICM42688P (R12); SPI4: ICM42605 (R12) → ICM42688P (R14) |
+| SD card | SDMMC1 (PC8-PC12/PD2) | SDMMC2 (UART4 owns PC10/PC11; pin overlaps flagged in `board.h`) |
+| Companion link | — | **UART4 (PC10/PC11) = TEL1 @ 115200** to the i.MX8M Plus; `MAV_0` defaults to ONBOARD |
+| Serial map (ttyS0…) | USART3 RC, USART6 TEL1, UART7 GPS, UART8 ESC | USART3 RC, UART4 TEL1 (IMX), USART6 TEL2 (SiK/gimbal), UART7 GPS, UART8 ESC (TEL3) |
+
+APB serial/sensor configuration is aligned with **ORQA's official PX4 APB
+target** ([`orqafpv/PX4-Autopilot` branch `develop_APB-initial`](https://github.com/orqafpv/PX4-Autopilot/tree/develop_APB-initial),
+`boards/orqa/h743-APB`), which also confirmed the UART4 "IMX" bridge pins
+and the ICM42605-on-SPI4 rotation. That branch keeps the classic PX4 flash
+layout (`0x08020000`, board ID 1013 — the Matek collision this port fixes);
+we intentionally diverge to the AP-compatible layout + registered IDs below.
+
+**All three targets share the ArduPilot-compatible flash layout:** bootloader
+in sectors 0-2 (384 KB, matching `FLASH_BOOTLOADER_LOAD_KB 384` in every Orqa
+ArduPilot hwdef-bl), app at `0x08060000` (1536 KB max), params in sector 15
+(`0x081E0000`).
+
+**Flashing:** ArduPilot bootloaders speak the same serial flashing protocol
+as the PX4 bootloader, so QGC / `px_uploader.py` can load a `.px4` through
+the ArduPilot bootloader already on the board — no bootloader replacement —
+provided the board ID matches:
+
+- **Mainline AP bootloader** (OrqaH7QuadCore, ID 1204): flashes the
+  quadcore/wingcore targets directly.
+- **Old factory bootloaders** (Orqa-private IDs — 1185 on the v1.1 Wing
+  image, 1188 on the orqafpv `h7quadcore` branch): refuse with a board-id
+  mismatch; the ID printed in the error is the installed bootloader's true
+  value. Either DFU-install a current bootloader (mainline AP or the PX4
+  one from this repo) or rebuild with that ID.
+- **APB**: `orqa_apb_default.px4` targets the factory APB bootloader; if it
+  rejects with a mismatch, that reported ID is the true `AP_HW_ORQAAPB` —
+  fix `boards/orqa/apb/firmware.prototype` + `src/hw_config.h` and rebuild.
+
+Recovery is always available via STM32 system DFU (`0x0483:0xdf11`, hold
+BOOT), and the factory bootloader also exposes DFU reboot (`ENABLE_DFU_BOOT`).
+
 ## Peripheral Map
 
 ### SPI Buses
@@ -228,7 +320,7 @@ Rotations verified from PCB layout analysis, physical measurement, and cross-ref
 | Current ADC | PC1 (ADC1_CH11) |
 | CAN RX | PB8 |
 | CAN TX | PB9 |
-| SDMMC1 | PC8/PC9/PC10/PC11/PC12/PD2 |
+| SDMMC (peripheral only — MMCSD driver not enabled, see Known gaps) | quad/wing SDMMC1 PC8-PC12/PD2; APB SDMMC2 |
 
 ---
 
@@ -246,6 +338,9 @@ boards/
       src/                   Board C/C++ source (pins, SPI, I2C, timers, LEDs)
     h7wingcore/              Wingcore board support (fixed-wing defaults)
       ...                    Same structure, different autostart + servo defaults
+    apb/                     DTK APB FC support (factory-bootloader layout, ICM42605)
+reference/
+  orqa-apb/                  Factory hwdef-bl + firmware-image analysis notes
 build.sh                     Docker build wrapper for Windows
 ORQA_PIN_REQUEST.md          Historical — pin request (now resolved)
 .planning/                   Project planning documents

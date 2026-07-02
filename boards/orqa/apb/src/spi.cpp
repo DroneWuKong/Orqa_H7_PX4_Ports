@@ -60,6 +60,9 @@ constexpr px4_spi_bus_t px4_spi_buses[SPI_BUS_MAX_BUS_ITEMS] = {
 		initSPIDevice(DRV_OSD_DEVTYPE_ATXXXX, SPI::CS{GPIO::PortA, GPIO::Pin15}),
 	}),
 	initSPIBus(SPI::Bus::SPI4, {
+		// APB probes ICM42605 then ICM42688P on SPI4 (same CS, PE11) — list
+		// both devtypes so either can match the bus.
+		initSPIDevice(DRV_IMU_DEVTYPE_ICM42605, SPI::CS{GPIO::PortE, GPIO::Pin11}),
 		initSPIDevice(DRV_IMU_DEVTYPE_ICM42688P, SPI::CS{GPIO::PortE, GPIO::Pin11}),
 	}),
 };

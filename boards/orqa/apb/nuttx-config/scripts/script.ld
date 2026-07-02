@@ -34,7 +34,7 @@
  *
  ****************************************************************************/
 
-/* The ORQA H7 QuadCore uses an STM32H743VI has 2048Kb of main FLASH memory.
+/* The ORQA DTK APB (STM32H743 FC) uses an STM32H743VI has 2048Kb of main FLASH memory.
  * The flash memory is partitioned into a User Flash memory and a System
  * Flash memory. Each of these memories has two banks:
  *
@@ -59,7 +59,7 @@
  *   2) BOOT=1: Boot address defined by user option byte BOOT_ADD1[15:0].
  *      ST programmed value: System bootloader at 0x1FF0:0000
  *
- * The ORQA H7 QuadCore has a switch on board, the BOOT0 pin is at ground so by default,
+ * The ORQA DTK APB (STM32H743 FC) has a switch on board, the BOOT0 pin is at ground so by default,
  * the STM32 will boot to address 0x0800:0000 in FLASH unless the switch is
  * depressed, then the boot will be from 0x1FF0:0000
  *
@@ -110,9 +110,8 @@
 MEMORY
 {
 	ITCM_RAM  (rwx) : ORIGIN = 0x00000000, LENGTH =   64K
-	/* ArduPilot-compatible layout: bootloader owns sectors 0-2 (384K, matches
-	 * mainline OrqaH7QuadCore FLASH_BOOTLOADER_LOAD_KB 384), app in sectors
-	 * 3-14, params in sector 15 (0x081E0000). */
+	/* Factory ArduPilot bootloader occupies sectors 0-2 (384K); app starts
+	 * at 0x08060000 (sectors 3-14). Sector 15 (0x081E0000) holds params. */
 	FLASH      (rx) : ORIGIN = 0x08060000, LENGTH = 1536K
 
 	DTCM1_RAM (rwx) : ORIGIN = 0x20000000, LENGTH =   64K
