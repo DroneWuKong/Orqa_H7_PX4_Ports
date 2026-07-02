@@ -1,0 +1,58 @@
+#!/bin/sh
+#
+# ORQA DTK APB (STM32H743 FC) board specific defaults
+#------------------------------------------------------------------------------
+
+# Transition from params file to flash-based params
+if [ -f $PARAM_FILE ]
+then
+	param load $PARAM_FILE
+	param save
+	# create a backup
+	mv $PARAM_FILE ${PARAM_FILE}.bak
+	reboot
+fi
+
+# Battery voltage divider: 10K + 1.2K network
+# BF: vbat_scale=112, div=1, mult=12 => effective ratio ~11.0
+param set-default BAT1_V_DIV 9.2931
+# BF: ibata_scale=108 => ~92.6 A/V (typical for this class)
+param set-default BAT1_A_PER_V 92.6
+param set-default BAT1_N_CELLS 6
+param set-default BAT1_V_LOAD_DROP 0.3
+
+# system_power unavailable
+param set-default CBRK_SUPPLY_CHK 894281
+
+# Select Generic Quadrotor X by default
+param set-default SYS_AUTOSTART 4001
+
+# Ghost RC
+param set-default RC_GHST_PRT_CFG 300
+param set-default RC_GHST_TEL_EN 1
+
+# Magnetometer on I2C1 - external probing enabled
+param set-default SYS_HAS_MAG 1
+
+# Enable gravity fusion for EKF2
+param set-default EKF2_IMU_CTRL 7
+
+# Buzzer is inverted logic, active output
+param set-default CBRK_BUZZER 0
+
+param set-default IMU_GYRO_RATEMAX 2000
+
+# DShot by default
+param set-default DSHOT_CONFIG 300
+
+# --- APB companion link ---------------------------------------------------
+# The i.MX8M Plus SOC on the APB reaches this FC over an internal CAN bus
+# (CAN2 on the SOC side -> FDCAN1 here) and a GPIO-switched UART (SOC UART3
+# routes to CSI1/CSI2/FC). The FC-side UART for the SOC link is not yet
+# confirmed on hardware. Once identified, enable an offboard MAVLink
+# instance on it, e.g.:
+#   param set-default MAV_1_CONFIG 101   # TEL1 (/dev/ttyS1, USART6)
+#   param set-default MAV_1_MODE 2       # Onboard
+#   param set-default SER_TEL1_BAUD 921600
+# WARNING (known PX4 bug, Feb 2025): enabling UAVCAN/FDCAN1 kills all
+# Timer5 outputs (motors 3-6). Leave UAVCAN_ENABLE=0 until fixed upstream.

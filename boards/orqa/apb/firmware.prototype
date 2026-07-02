@@ -1,13 +1,13 @@
 {
-    "board_id": 1204,
+    "board_id": 1185,
     "magic": "PX4FWv1",
-    "description": "Firmware for the ORQA H7 QuadCore board",
+    "description": "Firmware for the ORQA DTK APB (STM32H743 FC side)",
     "image": "",
     "build_time": 0,
-    "summary": "ORQAH7QUADCORE",
+    "summary": "ORQAAPB",
     "version": "0.1",
     "image_size": 0,
-    "image_maxsize": 1835008,
+    "image_maxsize": 1572864,
     "git_identity": "",
     "board_revision": 0
 }

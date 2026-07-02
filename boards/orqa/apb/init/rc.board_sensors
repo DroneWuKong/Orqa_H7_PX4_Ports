@@ -1,0 +1,38 @@
+#!/bin/sh
+#
+# ORQA DTK APB (STM32H743 FC) board specific sensors init
+#
+# The APB FC circuit is the H7 QuadCore design. Orqa's spec sheet lists
+# ICM42605 for the APB IMU; QuadCore-lineage boards carry MPU6000 (v1.1)
+# or ICM42688P, so all three are probed. Rotations are carried over from
+# the QuadCore PCB layout verification — re-verify on APB hardware.
+#------------------------------------------------------------------------------
+board_adc start
+
+# IMU 1 on SPI1 (CS=PA4) — ICM42605 (APB spec), ICM42688P or MPU6000 fallback
+# QuadCore physical: 180° CW to face forward, bottom-mounted
+# PX4: ROTATION_PITCH_180 (R12)
+icm42605 -R 12 -b 1 -s start
+if [ $? -ne 0 ]; then
+	icm42688p -R 12 -b 1 -s start
+fi
+if [ $? -ne 0 ]; then
+	mpu6000 -R 12 -b 1 -s start
+fi
+
+# IMU 2 on SPI4 (CS=PE11, DRDY=PE10) — ICM42688P, ICM42605 fallback
+# QuadCore physical: 90° CCW to face forward, bottom-mounted
+# PX4: ROTATION_ROLL_180_YAW_90 (R14)
+icm42688p -R 14 -b 4 -s start
+if [ $? -ne 0 ]; then
+	icm42605 -R 14 -b 4 -s start
+fi
+
+# Barometer — DPS310 on I2C2 @ 0x77 (119 decimal)
+dps310 -I start -a 119
+
+# Magnetometer — QMC5883 on I2C1 @ 0x0D (13 decimal), external
+qmc5883l -X start -a 13
+
+# GPS on UART7
+gps start -d /dev/ttyS2 -p ubx

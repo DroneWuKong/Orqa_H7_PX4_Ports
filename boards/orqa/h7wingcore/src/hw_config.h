@@ -17,7 +17,13 @@
 #define BOARD_VBUS                     MK_GPIO_INPUT(GPIO_OTGFS_VBUS)
 
 #define BOOT_DELAY_ADDRESS             0x000001a0
-#define BOARD_TYPE                     1013
+/* 1204 = AP_HW_ORQAH7QUADCORE, registered in the shared board-id registry
+ * (ArduPilot Tools/AP_Bootloader/board_types.txt). The previous value 1013
+ * collided with AP_HW_MATEKH743. Note: the FACTORY Orqa ArduPilot
+ * bootloader reports id 1185 (extracted from arduplane_with_bl_v1.1.hex),
+ * so PX4 images flash via THIS bootloader (DFU-installed), not the
+ * factory one. */
+#define BOARD_TYPE                     1204
 #define BOARD_FLASH_SECTORS            (14)
 #define BOARD_FLASH_SIZE               (16 * 128 * 1024)
 #define APP_RESERVATION_SIZE           (1 * 128 * 1024)

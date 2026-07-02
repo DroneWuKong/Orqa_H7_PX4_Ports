@@ -1,5 +1,5 @@
 /**
- * hw_config.h - ORQA H7 QuadCore bootloader configuration
+ * hw_config.h - ORQA DTK APB (STM32H743 FC) bootloader configuration
  */
 
 #ifndef HW_CONFIG_H_
@@ -10,22 +10,32 @@
 #define SERIAL0_DEV    0x02
 #define SERIAL1_DEV    0x04
 
-#define APP_LOAD_ADDRESS               0x08020000
+/* The APB ships with Orqa's ArduPilot bootloader in sectors 0-2 (384 KB,
+ * per the factory hwdef-bl: FLASH_BOOTLOADER_LOAD_KB 384). The app is
+ * linked at 0x08060000 so the same image flashes through either the
+ * factory bootloader or this PX4 bootloader.
+ */
+#define APP_LOAD_ADDRESS               0x08060000
 #define BOOTLOADER_DELAY               3000
 #define INTERFACE_USB                  1
 #define INTERFACE_USB_CONFIG           "/dev/ttyACM0"
 #define BOARD_VBUS                     MK_GPIO_INPUT(GPIO_OTGFS_VBUS)
 
 #define BOOT_DELAY_ADDRESS             0x000001a0
-/* 1204 = AP_HW_ORQAH7QUADCORE, registered in the shared board-id registry
- * (ArduPilot Tools/AP_Bootloader/board_types.txt). The previous value 1013
- * collided with AP_HW_MATEKH743. Note: the FACTORY Orqa ArduPilot
- * bootloader reports id 1185 (extracted from arduplane_with_bl_v1.1.hex),
- * so PX4 images flash via THIS bootloader (DFU-installed), not the
- * factory one. */
-#define BOARD_TYPE                     1204
-#define BOARD_FLASH_SECTORS            (14)
+/* 1185 extracted from the factory v1.1 bootloader board_info struct
+ * (arduplane_with_bl_v1.1.hex @ 0x08009560: type=0x4A1, rev=0,
+ * fw_size=0x1A0000). Orqa allocated this privately (mainline
+ * board_types.txt now assigns 1185 to X-MAV-AP-F405Mini); the exact
+ * AP_HW_ORQAAPB value is pending confirmation from Orqa. If the factory
+ * bootloader rejects an upload with a board-id mismatch, update this and
+ * firmware.prototype together.
+ */
+#define BOARD_TYPE                     1185
+/* App region: sectors 3..14 (0x08060000..0x081E0000, 1536 KB).
+ * Sector 15 is reserved for flash-based params (APP_RESERVATION_SIZE). */
+#define BOARD_FLASH_SECTORS            (12)
 #define BOARD_FLASH_SIZE               (16 * 128 * 1024)
+#define BOARD_FIRST_FLASH_SECTOR_TO_ERASE 3
 #define APP_RESERVATION_SIZE           (1 * 128 * 1024)
 
 #define OSC_FREQ                       8

@@ -1,8 +1,9 @@
-# PX4 Port — Orqa H7 QuadCore + Wingcore
+# PX4 Port — Orqa H7 QuadCore + Wingcore + DTK APB
 
-PX4 flight controller firmware port for the **Orqa H7 QuadCore** and **Orqa H7 Wingcore** (STM32H743VIH6, 8 MHz HSE).
+PX4 flight controller firmware port for the **Orqa H7 QuadCore**, **Orqa H7 Wingcore**, and the FC side of the **Orqa DTK APB** (all STM32H743VIH6, 8 MHz HSE).
 
 > **Status: Phase 2 Complete — Full board definition with all sensors, motors, servos, and peripherals configured. Ready for hardware validation.**
+> **2026-07-02:** Added the `orqa_apb` target (factory-bootloader-compatible layout), moved quadcore/wingcore to the registered board ID **1204** (`AP_HW_ORQAH7QUADCORE`), and switched USB identity to Orqa's real VID `0x35b6`. See [Orqa DTK APB variant](#orqa-dtk-apb-variant).
 
 ---
 
@@ -23,7 +24,8 @@ The QuadCore and Wingcore are **the same PCB**. PX4 handles quad vs fixed-wing a
 | CAN | FDCAN1 — RX=PB8, TX=PB9 |
 | Motors | 8 outputs: TIM4(PD12/PD13), TIM2(PA1/PA0), TIM5(PA2/PA3), TIM3(PB1/PB0) |
 | Servos | 2 outputs: TIM15(PE6/PE5) |
-| Board ID | 1013 (matches ORQA official PX4 fork) |
+| Board ID | 1204 (`AP_HW_ORQAH7QUADCORE`, registered in mainline `board_types.txt`) |
+| USB (PX4 firmware) | `0x35b6:0x0091` (Orqa VID; matches factory ArduPlane image) |
 
 ### Pin Map Sources
 
@@ -75,6 +77,8 @@ Pin assignments were cross-validated from four independent sources:
 | QuadCore bootloader | `make orqa_h7quadcore_bootloader` | Bootloader |
 | Wingcore firmware | `make orqa_h7wingcore_default` | Fixed-wing |
 | Wingcore bootloader | `make orqa_h7wingcore_bootloader` | Bootloader |
+| DTK APB FC firmware | `make orqa_apb_default` | APB integrated FC (app @ 0x08060000) |
+| DTK APB PX4 bootloader | `make orqa_apb_bootloader` | Optional factory-bootloader replacement |
 
 ---
 
@@ -158,6 +162,37 @@ make orqa_h7wingcore_default    # fixed-wing
 4. Choose the `.px4` file for your target
 
 ---
+
+## Orqa DTK APB variant
+
+The **Orqa DTK APB** is a single-board flight computer: this same STM32H743 FC
+circuit plus an NXP i.MX8M Plus companion SOC (4×A53 + M7, 2.25 TOPS NPU,
+H.265 encode, dual MIPI-CSI). The `boards/orqa/apb` target covers the FC side.
+See [`reference/orqa-apb/README.md`](reference/orqa-apb/README.md) for the
+factory hwdef-bl and firmware-image analysis behind these values.
+
+Differences from the quadcore/wingcore targets:
+
+| Item | QuadCore / Wingcore | DTK APB |
+|------|--------------------|---------|
+| App load address | `0x08020000` (PX4 bootloader, sector 0) | `0x08060000` (factory ArduPilot bootloader, sectors 0-2) |
+| Max firmware size | 1792 KB | 1536 KB |
+| Board ID | 1204 (registered) | 1185 (provisional — extracted from factory bootloader; `AP_HW_ORQAAPB` pending Orqa confirmation) |
+| USB PID | `0x35b6:0x0091` | `0x35b6:0x0090` |
+| IMU probe order (SPI1) | MPU6000 → ICM42688P | ICM42605 → ICM42688P → MPU6000 |
+| Flashing | DFU-install PX4 bootloader, then QGC | Flash `.px4` directly through the **factory** bootloader (same serial protocol); DFU replacement optional |
+| Companion link | — | SOC ↔ FC via internal CAN + GPIO-switched UART (FC-side UART TBD; see `rc.board_defaults`) |
+
+Params live in flash sector 15 (`0x081E0000`) on all three targets.
+
+**Flashing the APB:** the factory ArduPilot bootloader speaks the same
+serial flashing protocol as the PX4 bootloader, so QGC / `px_uploader.py`
+can load `orqa_apb_default.px4` through it without touching the bootloader —
+provided the board ID matches. If the upload is rejected with a board-id
+mismatch, the reported ID in the error is the true `AP_HW_ORQAAPB` value:
+fix `boards/orqa/apb/firmware.prototype` + `src/hw_config.h` and rebuild.
+Recovery is always available via STM32 system DFU (`0x0483:0xdf11`, hold
+BOOT), and the factory bootloader also exposes DFU reboot (`ENABLE_DFU_BOOT`).
 
 ## Peripheral Map
 
@@ -246,6 +281,9 @@ boards/
       src/                   Board C/C++ source (pins, SPI, I2C, timers, LEDs)
     h7wingcore/              Wingcore board support (fixed-wing defaults)
       ...                    Same structure, different autostart + servo defaults
+    apb/                     DTK APB FC support (factory-bootloader layout, ICM42605)
+reference/
+  orqa-apb/                  Factory hwdef-bl + firmware-image analysis notes
 build.sh                     Docker build wrapper for Windows
 ORQA_PIN_REQUEST.md          Historical — pin request (now resolved)
 .planning/                   Project planning documents

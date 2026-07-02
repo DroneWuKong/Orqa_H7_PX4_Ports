@@ -174,3 +174,41 @@ OSD-1 resolved: no spare SPI bus on H743 (SPI1=IMU, SPI2=Flash, SPI3=OSD, SPI4=I
 **Open questions for hardware phase (add to Phase 3 checklist):**
 - CAN-3: Free GPIO on H503 for CS2?
 - CAN-5: DroneCAN baud rate — 1 Mbps or 500 kbps?
+
+---
+
+## Update: July 2 2026 — DTK APB target + board-ID corrections
+
+New inputs this session: Orqa's APB bootloader hwdef (`AP_HW_ORQAAPB`, USB
+`0x35b6:0x0090`, fw @ 384 KB) and the factory `arduplane_with_bl_v1.1.hex`.
+Analysis preserved in `reference/orqa-apb/README.md`.
+
+**Forensics from the factory image:**
+- Bootloader board_info @ 0x08009560: **board_type=1185**, fw_size=0x1A0000.
+  1185 is an Orqa-private allocation — mainline now assigns it to X-MAV.
+- App = "OrqaH743Wing" ArduPlane V4.5.7, USB `0x35b6:0x0091` (bl + app).
+- Mainline ArduPilot has registered **AP_HW_ORQAH7QUADCORE = 1204**.
+- Our old board ID 1013 actually belongs to **AP_HW_MATEKH743** (the "ORQA
+  official fork" value was a Matek collision) — fixed.
+
+**Changes:**
+- New `boards/orqa/apb/` target (`orqa_apb_default` / `orqa_apb_bootloader`):
+  app linked @ **0x08060000** so it flashes straight through the factory
+  ArduPilot bootloader; 1536 KB app region, params still in sector 15;
+  board ID **1185 provisional** (real `AP_HW_ORQAAPB` value pending Orqa —
+  user has a direct line, see Ai-Project udev-rules note); USB
+  `0x35b6:0x0090` "PX4 ORQA APB"; SPI1 IMU probe order ICM42605 →
+  ICM42688P → MPU6000 (APB spec sheet says ICM42605); IMU rotations carried
+  over from QuadCore, re-verify on APB hardware; companion-link (SOC CAN2 +
+  GPIO-switched UART3) notes in `rc.board_defaults`, MAVLink instance left
+  disabled until the FC-side UART is confirmed.
+- quadcore/wingcore: board ID 1013 → **1204**; USB 0x3162:0x0050 (Holybro
+  VID leftover from KakuteH7) → **0x35b6:0x0091** (factory Orqa identity).
+
+**Open hardware questions (add to Phase 3):**
+- APB-1: true `AP_HW_ORQAAPB` numeric board ID (ask Orqa; or read the
+  rejected-upload error from the factory bootloader).
+- APB-2: FC-side UART wired to the SOC UART3 switch.
+- APB-3: verify IMU rotations on APB (assumed same PCB orientation).
+- APB-4: confirm PX4 fw via factory bootloader end-to-end (protocol OK,
+  board-id gate is the only expected blocker).
