@@ -344,6 +344,11 @@
 
 /* Alternate function pin selections ************************************************/
 
+/* CAN — FDCAN1 driven directly by the PX4 UAVCAN module (no NuttX
+ * SocketCAN; CONFIG_STM32H7_FDCAN1 must stay unset in defconfig) */
+#define GPIO_CAN1_RX     GPIO_CAN1_RX_2     /* PB8 */
+#define GPIO_CAN1_TX     GPIO_CAN1_TX_2     /* PB9 */
+
 
 #define GPIO_USART1_RX   GPIO_USART1_RX_2    /* PA10 */
 #define GPIO_USART1_TX   GPIO_USART1_TX_2    /* PA9 */
@@ -365,6 +370,10 @@
 
 #define GPIO_UART7_RX    GPIO_UART7_RX_3    /* PE7 */
 #define GPIO_UART7_TX    GPIO_UART7_TX_3    /* PE8 */
+
+/* ESC telemetry, RX only (TX pin unused on the board) */
+#define GPIO_UART8_RX    GPIO_UART8_RX_1    /* PE0 */
+#define GPIO_UART8_TX    GPIO_UART8_TX_1    /* PE1 */
 
 /* SPI
  * SPI1 is IMU1 (MPU6000 / ICM42688P)
