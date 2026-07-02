@@ -39,33 +39,71 @@ Pin assignments were cross-validated from four independent sources:
 
 ## What Works
 
-- [x] Firmware compiles against PX4
-- [x] Bootloader compiles
-- [x] Board target discoverable by PX4 build system
+All six targets **compile and link clean against PX4 v1.15.4** (verified this
+session — see [Build Verification](#build-verification)). Before this the port
+had never actually built; the first real compile surfaced a cascade of latent
+bugs (missing I2C2/UART8/CAN pin defines, SPI3/SPI4 pins pointing at the wrong
+pads, post-1.15 module names) — all now fixed.
+
+- [x] Firmware **compiles + links** against PX4 v1.15.4 (all 3 boards)
+- [x] Bootloader **compiles + links** (all 3 boards)
+- [x] Board targets discoverable by the PX4 build system
 - [x] Docker build wrapper (`build.sh`)
 - [x] Full GPIO pin map — all sensors, buses, and outputs configured
-- [x] Dual ICM42688P with correct rotations
+- [x] Dual IMU (SPI1 MPU6000/ICM42688P, SPI4 ICM42688P; APB SPI4 ICM42605/ICM42688P) with per-chip rotations, both devtypes registered per bus
 - [x] DPS310 barometer on I2C2
 - [x] QMC5883 magnetometer on I2C1
 - [x] MAX7456 OSD on SPI3
 - [x] W25Q128FV dataflash on SPI2
-- [x] 8 motor + 2 servo timer/DMA mapping
-- [x] CAN bus enabled (FDCAN1)
-- [x] SDMMC1 microSD support
+- [x] 8 motor + 2/3 servo timer/DMA mapping
+- [x] CAN bus (FDCAN1) pins defined for the PX4 UAVCAN driver
 - [x] 3 status LEDs (PA8/PA10/PD11)
 - [x] Buzzer on PE9 (TIM1_CH1)
 - [x] Battery voltage (PC0) and current (PC1) ADC
 - [x] Camera switch GPIO (PD0)
-- [x] Wingcore fixed-wing variant
+- [x] Wingcore fixed-wing variant; APB companion (i.MX8M Plus) MAVLink on UART4 @ 230400
+
+### Known gaps (not yet functional in firmware)
+
+- [ ] **microSD** — the SDMMC *peripheral* pins are defined, but the NuttX
+  MMC/SD upper layer (`CONFIG_MMCSD*`) is not enabled and `src/sdio.c` is not
+  compiled or called, so SD logging does **not** work. This matches ORQA's own
+  official PX4 port (same gap); wiring it up is future work.
+
+## Build Verification
+
+Built with `arm-none-eabi-gcc 13.2` against a clean PX4 **v1.15.4** checkout
+(the pinned toolchain is 9-2020-q2 / GCC 9.3.1; newer GCC produces slightly
+larger code, so the FLASH figures below are an upper bound):
+
+| Target | Artifact | FLASH used (of 1536 KB app) |
+|--------|----------|------------------------------|
+| `orqa_h7quadcore_default`    | 1.45 MB `.px4` | 98.78% |
+| `orqa_h7quadcore_bootloader` | 53 KB `.px4`   | (sector 0) |
+| `orqa_h7wingcore_default`    | 1.42 MB `.px4` | 96.05% |
+| `orqa_h7wingcore_bootloader` | 53 KB `.px4`   | (sector 0) |
+| `orqa_apb_default`           | 1.45 MB `.px4` | 99.08% |
+| `orqa_apb_bootloader`        | 53 KB `.px4`   | (sector 0) |
+
+The 1536 KB app partition (a consequence of the 384 KB ArduPilot-compatible
+bootloader reservation) does not fit PX4's full "everything" module set, so
+each target carries an **airframe-appropriate** selection: quadcore + APB are
+multirotor (`SYS_AUTOSTART 4001`), wingcore is fixed-wing (`SYS_AUTOSTART
+2100`, with the core MC controllers kept because PX4 v1.15 libraries reference
+their parameters). Optional payload/legacy modules (SIH sim, gyro-FFT, DDS,
+landing-target, and on wingcore the camera/gimbal/smart-battery drivers) are
+trimmed to fit. FLASH is tight under GCC 13 — the pinned GCC 9.3 leaves more
+headroom.
 
 ## What Needs Hardware Validation
 
 - [ ] Flash and boot on actual ORQA H7 hardware
 - [x] Verify IMU rotation values match physical orientation
-- [ ] Confirm UART ttyS mapping under NuttX serial reordering
+- [x] UART ttyS mapping derived (reordering disabled; APB companion link = UART4/TEL1 @ 230400, confirmed from Ai-Project mavlink-router.conf + ArduPilot params) — still to be checked on hardware
 - [ ] DShot ESC communication on motor outputs
 - [ ] QGroundControl connection and parameter storage
 - [ ] Flight test (quad and fixed-wing)
+- [ ] Wire up microSD (MMCSD upper layer + `sdio.c`) if SD logging is needed
 
 ---
 
@@ -282,7 +320,7 @@ Rotations verified from PCB layout analysis, physical measurement, and cross-ref
 | Current ADC | PC1 (ADC1_CH11) |
 | CAN RX | PB8 |
 | CAN TX | PB9 |
-| SDMMC1 | PC8/PC9/PC10/PC11/PC12/PD2 |
+| SDMMC (peripheral only — MMCSD driver not enabled, see Known gaps) | quad/wing SDMMC1 PC8-PC12/PD2; APB SDMMC2 |
 
 ---
 

@@ -46,7 +46,12 @@
 
 constexpr px4_spi_bus_t px4_spi_buses[SPI_BUS_MAX_BUS_ITEMS] = {
 	initSPIBus(SPI::Bus::SPI1, {
+		// SPI1 carries MPU6000 (v1.1 boards) or ICM42688P (later revs) on the
+		// same CS (PA4). Both devtypes must be listed so the ICM42688P fallback
+		// in rc.board_sensors can actually match the bus (SPIBusIterator keys
+		// on devtype); with only MPU6000 the fallback was dead code.
 		initSPIDevice(DRV_IMU_DEVTYPE_MPU6000, SPI::CS{GPIO::PortA, GPIO::Pin4}),
+		initSPIDevice(DRV_IMU_DEVTYPE_ICM42688P, SPI::CS{GPIO::PortA, GPIO::Pin4}),
 	}),
 	initSPIBus(SPI::Bus::SPI2, {
 		initSPIDevice(SPIDEV_FLASH(0), SPI::CS{GPIO::PortB, GPIO::Pin12}),
@@ -55,6 +60,9 @@ constexpr px4_spi_bus_t px4_spi_buses[SPI_BUS_MAX_BUS_ITEMS] = {
 		initSPIDevice(DRV_OSD_DEVTYPE_ATXXXX, SPI::CS{GPIO::PortA, GPIO::Pin15}),
 	}),
 	initSPIBus(SPI::Bus::SPI4, {
+		// APB probes ICM42605 then ICM42688P on SPI4 (same CS, PE11) — list
+		// both devtypes so either can match the bus.
+		initSPIDevice(DRV_IMU_DEVTYPE_ICM42605, SPI::CS{GPIO::PortE, GPIO::Pin11}),
 		initSPIDevice(DRV_IMU_DEVTYPE_ICM42688P, SPI::CS{GPIO::PortE, GPIO::Pin11}),
 	}),
 };

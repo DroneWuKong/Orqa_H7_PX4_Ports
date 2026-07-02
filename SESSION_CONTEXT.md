@@ -240,3 +240,34 @@ Analysis preserved in `reference/orqa-apb/README.md`.
   → likely did not compile; "Phase 1 compiles" claim needs re-verification).
 - Their PX4 APB identity: id 1013 @ 0x08020000 (origin of our old 1013).
   We stay on 1185-provisional @ 0x08060000 (AP-bootloader compatible).
+
+### Addendum 3 (2026-07-02): actually compiled against PX4 v1.15.4 — all 6 targets GREEN
+Stood up the toolchain in-sandbox (arm-none-eabi-gcc 13.2 — note v1.15.4 pins
+9.3.1; ARM/xPack GCC downloads are egress-blocked so 13.2 was used, with a
+version-gated `-Wno-error` in cmake/px4_add_common_flags.cmake for the newer
+compiler only) and built every target from a clean v1.15.4 checkout.
+
+The port had NEVER compiled before. Real bugs found and fixed while getting to green:
+- Missing pin defines: I2C2 (baro bus), UART8 (ESC telem), CAN1 — NuttX wouldn't build.
+- SPI3 (OSD) had no pin defines; SPI4 pointed at PE2/PE5/PE6 (VBUS + servos) not PE12/13/14.
+- Post-1.15 module names (FW_MODE_MANAGER/FW_LATERAL_LONGITUDINAL_CONTROL → FW_POS_CONTROL); dropped bogus CONFIG_NUM_MISSION_ITMES_SUPPORTED.
+- NSH defconfigs missing the `# CONFIG_NSH_DISABLE_* is not set` block (PX4 hard-errors) and CONFIG_NSH_DISABLE_MOUNT=y.
+- timer_config.cpp block-comments broke PX4's actuator-metadata generator → converted to //.
+- FDCAN: removed CONFIG_STM32H7_FDCAN1 (NuttX SocketCAN); PX4 UAVCAN drives FDCAN1 directly.
+- Rebased all defconfigs on ORQA's official APB defconfig (correct RTC_DATETIME, MMCSD-less SD, etc.).
+
+Flash-budget decision: the 384 KB AP-compatible bootloader leaves a 1536 KB
+app partition; the full module set overflowed by 238 KB. Split to
+airframe-appropriate module sets (quad+APB multirotor, wingcore fixed-wing;
+wingcore keeps core MC controllers because v1.15 libs reference MPC_* params).
+
+Adversarial audit (workflow) then found 3 confirmed bugs, all fixed:
+1. SPI1 listed only MPU6000 devtype → ICM42688P fallback was dead code (all 3). Added the devtype (and ICM42605 on APB SPI4).
+2. APB TEL3 mapped to /dev/ttyS4 = UART8 = the DShot ESC-telem UART (RX-only) → removed the TEL3 BOARD_SERIAL line.
+3. **Bootloader fw_size bug**: PX4 hardcodes BOOTLOADER_RESERVATION_SIZE=128 KB, so with the app at 0x08060000 the bootloader computed fw_size=1792 KB and its erase/CRC loops ran 128 KB past the end of flash (bus-fault). Fixed by setting APP_RESERVATION_SIZE=384 KB → fw_size=1536 KB, scans stay in [0x08060000, 0x081E0000). A compile-only check never exercises this.
+
+Known gap (matches ORQA official, documented not fixed): microSD not wired
+(no CONFIG_MMCSD, sdio.c uncompiled).
+
+Final build sizes: quad 98.78%, wing 96.05%, APB 99.08% of the 1536 KB app
+(GCC 13; roomier under pinned GCC 9.3). Bootloaders 53 KB each.

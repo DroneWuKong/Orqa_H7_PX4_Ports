@@ -35,7 +35,13 @@
 #define BOARD_FLASH_SECTORS            (12)
 #define BOARD_FLASH_SIZE               (16 * 128 * 1024)
 #define BOARD_FIRST_FLASH_SECTOR_TO_ERASE 3
-#define APP_RESERVATION_SIZE           (1 * 128 * 1024)
+/* 384 KB reserved: 256 KB for the bootloader gap (app is at sector 3, not
+ * sector 1) + 128 KB for the flash-params sector. The PX4 bootloader
+ * hardcodes BOOTLOADER_RESERVATION_SIZE=128 KB, so APP_SIZE_MAX (=fw_size)
+ * = 2048 - 128 - APP_RESERVATION. With 384 KB this yields exactly 1536 KB,
+ * keeping the bootloader's erase/CRC scans inside [0x08060000, 0x081E0000)
+ * instead of overrunning the params sector and the end of flash. */
+#define APP_RESERVATION_SIZE           (3 * 128 * 1024)
 
 #define OSC_FREQ                       8
 
