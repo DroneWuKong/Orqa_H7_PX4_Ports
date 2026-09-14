@@ -6,12 +6,15 @@ the ORQA H7 QuadCore PX4 port.
 ## Recovered artifact
 
 - Original uploaded archive: `betaflight_4.4.1_STM32H743_ORQAH7QUADCORE.zip`
-- Original internal path: `4.4.1/ORQAH7QuadCore.config`
+- Original archive contents:
+  - `4.4.1/ORQAH7QuadCore.config`
+  - `4.4.1/betaflight_4.4.1_STM32H743_ORQAH7QUADCORE.hex`
 - Recovered file: `ORQAH7QuadCore.config`
 - Recovered config SHA-256: `eaf239a5e973e963aebe71ee0d31ded9582149ce19f747e70ef837dbe2f2798a`
 
-The config text was recovered verbatim from the recorded output of the original
-archive extraction performed on 2026-03-16. The original ZIP bytes were not
+The archive contained no `config.h`; it used Betaflight's unified `.config` format
+plus a compiled `.hex` image. The config text was recovered verbatim from the
+recorded output of the original archive extraction performed on 2026-03-16. The original ZIP bytes were not
 present in this repository, its Git history, or the retained file library, so an
 archive checksum cannot be supplied.
 
