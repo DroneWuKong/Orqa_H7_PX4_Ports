@@ -97,6 +97,7 @@
 #define USE_MAG
 #define USE_MAG_QMC5883
 #define MAG_I2C_INSTANCE         I2CDEV_1
+#define DASHBOARD_I2C_INSTANCE   I2CDEV_1
 
 #define USE_BARO
 #define USE_BARO_DPS310

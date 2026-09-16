@@ -18,7 +18,7 @@ make TARGET=ORQA_H743 EXTRA_FLAGS=-Werror
 ```
 
 The resulting Intel HEX has SHA-256
-`a9da6cd7507c81560afbd6e6c09830a1efe82cef9fb0f99f5be74710141c9712`.
+`ce6dd9718cf224eeb37d3a0e2c6ee6b02f5576f0be953bce650652a77d1e955f`.
 
 `config.h` contains the peripheral and pin definitions requested by the board
 port. Betaflight itself enters a target through `target.h`, so `target.h`
