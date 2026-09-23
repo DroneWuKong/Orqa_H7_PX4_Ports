@@ -1,13 +1,14 @@
 # Betaflight ORQA targets and reference material
 
-This directory contains PCB-specific Betaflight targets for the standalone ORQA
-H7 QuadCore and the ORQA DTK APB, plus the historical unified-target evidence
-used during the original PX4 port.
+This directory contains PCB-specific Betaflight targets for the ORQA F405 Pro,
+the standalone ORQA H7 QuadCore, and the ORQA DTK APB, plus the historical
+unified-target evidence used during the original PX4 port.
 
 ## Available targets
 
 | Board | Betaflight | Target files | Status |
 | --- | --- | --- | --- |
+| ORQA F405 Pro | 2026.6 | [config.h](2026.6/configs/ORQA/ORQA_F405/config.h), [build notes](2026.6/configs/ORQA/ORQA_F405/README.md) | Both sensor revisions compile and link on 2026.6.3 |
 | ORQA H7 QuadCore | 2026.6 | [config.h](2026.6/configs/ORQA/ORQA_H743/config.h), [build notes](2026.6/configs/ORQA/ORQA_H743/README.md) | Compiles and links on 2026.6.2 |
 | ORQA DTK APB | 2026.6 | [config.h](2026.6/configs/ORQA/ORQA_APB/config.h), [build notes](2026.6/configs/ORQA/ORQA_APB/README.md) | Both sensor revisions compile and link on 2026.6.2 |
 | ORQA H7 QuadCore | 4.4.4 | [source target and HEX](4.4.4/ORQA_H743/), [build notes](4.4.4/ORQA_H743/README.md) | Compiles and links on 4.4.4 |
@@ -18,11 +19,21 @@ From a Betaflight `2026.6-maintenance` checkout, point
 directory:
 
 ```sh
+make CONFIG=ORQA_F405 \
+  BETAFLIGHT_CONFIG=/path/to/Orqa_H7_PX4_Ports/reference/betaflight/2026.6
+
 make CONFIG=ORQA_H743 \
   BETAFLIGHT_CONFIG=/path/to/Orqa_H7_PX4_Ports/reference/betaflight/2026.6
 
 make CONFIG=ORQA_APB \
   BETAFLIGHT_CONFIG=/path/to/Orqa_H7_PX4_Ports/reference/betaflight/2026.6
+```
+
+The F405 command above targets the factory MPU6000 population. For the later
+ICM42688P population, add:
+
+```sh
+EXTRA_FLAGS=-DORQA_F405_IMU_ICM42688P
 ```
 
 The APB command above targets the original MPU6000 + ICM42605 population. For
