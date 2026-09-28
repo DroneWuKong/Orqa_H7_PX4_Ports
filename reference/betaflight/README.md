@@ -53,7 +53,7 @@ Run the software-only regression check against the intended Betaflight checkout:
 
 ```sh
 ARM_NONE_EABI_NM=/path/to/arm-none-eabi-nm \
-  reference/betaflight/2026.6/verify-gps-rescue-build.sh \
+  bash reference/betaflight/2026.6/verify-gps-rescue-build.sh \
   /path/to/betaflight
 ```
 
