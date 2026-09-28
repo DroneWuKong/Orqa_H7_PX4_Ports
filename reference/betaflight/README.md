@@ -37,6 +37,31 @@ ArduPilot bootloader expects an application at `0x08060000`, so it cannot
 directly install the normal Betaflight HEX. Read the APB build notes and use a
 verified STM32 DFU/SWD recovery procedure.
 
+## GPS Rescue dependency regression
+
+Betaflight 2026.6.1 and 2026.6.2 can compile a multirotor GPS Rescue image
+without the position-hold task when a build selects GPS Rescue but omits the
+hold features. Upstream fixed that in
+[PR #15761](https://github.com/betaflight/betaflight/pull/15761) and backported
+it to `2026.6-maintenance` in
+[PR #15762](https://github.com/betaflight/betaflight/pull/15762).
+
+The ORQA_H743 and ORQA_APB configurations already select a complete feature set:
+their 2026.6.2 ELFs contain GPS Rescue, altitude hold, and position hold. Keep
+that property explicit in validation instead of adding redundant target macros.
+Run the software-only regression check against the intended Betaflight checkout:
+
+```sh
+ARM_NONE_EABI_NM=/path/to/arm-none-eabi-nm \
+  reference/betaflight/2026.6/verify-gps-rescue-build.sh \
+  /path/to/betaflight
+```
+
+The check builds both targets with `-Werror` and fails unless their ELFs contain
+the GPS Rescue task plus the shared altitude- and position-hold stack. It does
+not exercise a receiver, GPS, motors, or flight behavior and does not replace
+props-off or contained-flight validation.
+
 ## Recovered artifact
 
 - Original uploaded archive: `betaflight_4.4.1_STM32H743_ORQAH7QUADCORE.zip`
