@@ -1,0 +1,79 @@
+name: H7 QuadCore Betaflight 2026 download
+on:
+  push:
+    branches: [codex/h7-quadcore-betaflight-2026-download]
+    paths: [.github/workflows/h7-quadcore-betaflight-2026.yml]
+permissions:
+  contents: write
+jobs:
+  firmware:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: orqa
+      - uses: actions/checkout@v4
+        with:
+          repository: betaflight/betaflight
+          ref: 9540d2aab7e1db01198e0dd022f2c8fd262bae44
+          persist-credentials: false
+          path: betaflight
+      - name: Install build prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y build-essential python3 zlib1g-dev
+      - name: Install pinned Arm toolchain
+        working-directory: betaflight
+        run: make arm_sdk_install
+      - name: Build standalone H7 QuadCore
+        working-directory: betaflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          git submodule update --init src/config lib/modules/dronecan/libcanard
+          make -j2 CONFIG=ORQA_H743 BETAFLIGHT_CONFIG="$GITHUB_WORKSPACE/orqa/reference/betaflight/2026.6" hex 2>&1 | tee "$GITHUB_WORKSPACE/build.log"
+      - name: Package firmware and provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir dist
+          mapfile -t images < <(find betaflight/obj -maxdepth 1 -name '*ORQA_H743*.hex')
+          test "${#images[@]}" -eq 1
+          cp "${images[0]}" dist/betaflight_2026.6.3_ORQA_H743.hex
+          cp build.log dist/
+          cp orqa/reference/betaflight/2026.6/configs/ORQA/ORQA_H743/config.h dist/
+          cp orqa/reference/betaflight/2026.6/configs/ORQA/ORQA_H743/README.md dist/TARGET_README.md
+          cp betaflight/LICENSE dist/BETAFLIGHT_LICENSE
+          {
+            echo 'Standalone ORQA H7 QuadCore; ORQA_H743; Betaflight 2026.6.3'
+            echo 'Status: build verified only; hardware bench and flight validation pending.'
+            echo "Betaflight source: https://github.com/betaflight/betaflight/tree/$(git -C betaflight rev-parse HEAD)"
+            echo "Board configuration source: https://github.com/$GITHUB_REPOSITORY/tree/$GITHUB_SHA/reference/betaflight/2026.6"
+            echo "Betaflight config submodule: $(git -C betaflight/src/config rev-parse HEAD)"
+            echo "Build run: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            betaflight/tools/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc --version
+          } > dist/BUILD_INFO.txt
+          (cd dist && sha256sum *.hex config.h > SHA256SUMS)
+          tar -czf dist/orqa-h7-quadcore-betaflight-2026.6.3-source.tar.gz --exclude=.git --exclude=obj --exclude=tools --exclude=downloads -C betaflight .
+          tar -czf dist/orqa-h7-quadcore-board-config-source.tar.gz -C orqa reference/betaflight/2026.6
+          cat > dist/RELEASE_NOTES.md <<'NOTES'
+          Betaflight 2026.6.3 for the standalone ORQA H7 QuadCore, target ORQA_H743.
+
+          Download betaflight_2026.6.3_ORQA_H743.hex and verify it against SHA256SUMS. BUILD_INFO.txt records the exact sources and build run. Source archives, target configuration and GPL license are included.
+
+          Build verification only. Hardware bench and flight qualification remain pending. Before flight, verify the exact board revision, both gyros and orientation, receiver, motor order and direction, OSD, GPS and failsafe with props removed. This firmware uses board defaults; it does not contain an aircraft-specific tune or saved user configuration.
+          NOTES
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ORQA-H7-QuadCore-Betaflight-2026.6.3
+          path: dist/
+          if-no-files-found: error
+      - name: Publish prerelease download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "orqa-h7-quadcore-betaflight-2026.6.3-build-$GITHUB_RUN_NUMBER" dist/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --title 'ORQA H7 QuadCore - Betaflight 2026.6.3 (bench validation pending)' --notes-file dist/RELEASE_NOTES.md
