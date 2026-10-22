@@ -157,6 +157,24 @@ class InstallerTests(unittest.TestCase):
             installer.install(self.px4)
         self.assertEqual(local.read_text(), "user edit\n")
 
+    def test_generated_bootloader_preserved_on_repeat_install(self):
+        (self.port / "boards/orqa/test/bootloader.px4board").write_text("bootloader fixture\n")
+        installer.install(self.px4)
+        target = "orqa_test_bootloader"
+        build = self.px4 / "build" / target
+        build.mkdir(parents=True)
+        (build / (target + ".bin")).write_bytes(b"built bootloader")
+        extras = self.px4 / "boards/orqa/test/extras"
+        extras.mkdir()
+        output = extras / (target + ".bin")
+        output.write_bytes(b"built bootloader")
+        installer.install(self.px4)
+        self.assertEqual(output.read_bytes(), b"built bootloader")
+        output.write_bytes(b"locally edited bootloader")
+        with self.assertRaisesRegex(ValueError, "local board changes"):
+            installer.install(self.px4)
+        self.assertEqual(output.read_bytes(), b"locally edited bootloader")
+
     def test_patch_conflict_changes_nothing(self):
         (self.px4 / "core.txt").write_text("user edit\n")
         with self.assertRaisesRegex(ValueError, "conflicts"):
