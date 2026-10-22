@@ -68,7 +68,7 @@
 |            |                  |                  |                  |                  |                  |                  |                  |   TIM8_TRIG      |
 |            |                  |                  |                  |                  |                  |                  |                  |   TIM8_COM       |
 |            |                  |                  |                  |                  |                  |                  |                  |                  |
-| Usage      | SPI1_RX_1        | USART6_RX_1      | USART1_RX_1      | SPI1_TX_1        |                  |                  | SDIO             |                  |
+| Usage      | SPI1_RX_1        | TIM8_UP          | USART6_RX_2      | SPI1_TX_1        |                  | USART1_RX_2      |                  |                  |
  */
 
 // DMA1 Channel/Stream Selections

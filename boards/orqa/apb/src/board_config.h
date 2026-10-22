@@ -128,16 +128,6 @@
 /* Camera switch - PD0 */
 #define GPIO_CAM_SW            /* PD0 */  (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTD|GPIO_PIN0)
 
-/* Power switch controls ******************************************************/
-
-#define SDIO_SLOTNO                    0  /* Only one slot */
-#define SDIO_MINOR                     0
-
-#if defined(CONFIG_BOARD_INITIALIZE) && !defined(CONFIG_BOARDCTL) && \
-   !defined(CONFIG_BOARD_INITTHREAD)
-#  warning SDIO initialization cannot be performed on the IDLE thread
-#endif
-
 /* By Providing BOARD_ADC_USB_CONNECTED (using the px4_arch abstraction)
  * this board support the ADC system_power interface, and therefore
  * provides the true logic GPIO BOARD_ADC_xxxx macros.

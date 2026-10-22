@@ -28,6 +28,8 @@ board), remapped to the Orqa F405 Pro pinout.
 | USB | 0x35b6:0x0092 (PID provisional — Orqa F405 USB PID not yet confirmed) |
 
 ## Status
+- Builds clean against PX4 v1.15.4 (`make orqa_f405pro_default`): 961,441 of
+  999,424 bytes (96.20%) in the corrected 976 KB application region.
 - The app starts at `0x0800C000`, matching the factory bootloader's 48 KB
   reservation, and uses a 976 KB application region.
 - The board has no microSD socket. SPI2 drives the MAX7456 OSD; SPI3 drives

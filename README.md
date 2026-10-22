@@ -77,18 +77,18 @@ See [Build Verification](#build-verification) for the exact target list.
 
 ## Build Verification
 
-Built with `arm-none-eabi-gcc 13.2` against a clean PX4 **v1.15.4** checkout
-(the pinned toolchain is 9-2020-q2 / GCC 9.3.1; newer GCC produces slightly
-larger code, so the FLASH figures below are an upper bound):
+Built in GitHub Actions with PX4's pinned `px4io/px4-dev-nuttx-focal` image
+and GCC 9.3.1 against a clean recursive PX4 **v1.15.4** checkout:
 
-| Target | Artifact | FLASH used (of 1536 KB app) |
-|--------|----------|------------------------------|
-| `orqa_h7quadcore_default`    | 1.45 MB `.px4` | 98.78% |
-| `orqa_h7quadcore_bootloader` | 53 KB `.px4`   | (sector 0) |
-| `orqa_h7wingcore_default`    | 1.42 MB `.px4` | 96.05% |
-| `orqa_h7wingcore_bootloader` | 53 KB `.px4`   | (sector 0) |
-| `orqa_apb_default`           | 1.45 MB `.px4` | 99.08% |
-| `orqa_apb_bootloader`        | 53 KB `.px4`   | (sector 0) |
+| Target | FLASH usage | Result |
+|--------|-------------|--------|
+| `orqa_h7quadcore_default` | 1,531,696 / 1,572,864 bytes (97.38%) | Pass |
+| `orqa_h7quadcore_bootloader` | 384 KB reserved region | Pass |
+| `orqa_h7wingcore_default` | 1,548,628 / 1,572,864 bytes (98.46%) | Pass |
+| `orqa_h7wingcore_bootloader` | 384 KB reserved region | Pass |
+| `orqa_apb_default` | 1,525,324 / 1,572,864 bytes (96.98%) | Pass |
+| `orqa_apb_bootloader` | 384 KB reserved region | Pass |
+| `orqa_f405pro_default` | 961,441 / 999,424 bytes (96.20%) | Pass |
 
 The 1536 KB app partition (a consequence of the 384 KB ArduPilot-compatible
 bootloader reservation) does not fit PX4's full "everything" module set, so
@@ -96,9 +96,8 @@ each target carries an **airframe-appropriate** selection: quadcore + APB are
 multirotor (`SYS_AUTOSTART 4001`), wingcore is fixed-wing (`SYS_AUTOSTART
 2100`, with the core MC controllers kept because PX4 v1.15 libraries reference
 their parameters). Optional payload/legacy modules (SIH sim, gyro-FFT, DDS,
-landing-target, and on wingcore the camera/gimbal/smart-battery drivers) are
-trimmed to fit. FLASH is tight under GCC 13 — the pinned GCC 9.3 leaves more
-headroom.
+landing-target, and camera/gimbal/smart-battery drivers) are trimmed to fit.
+The build matrix is the source of truth for continued flash-fit checks.
 
 ## What Needs Hardware Validation
 
