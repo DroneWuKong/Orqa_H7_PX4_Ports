@@ -48,6 +48,19 @@ def install(px4):
                 raise ValueError("Refusing symlink in overlay: {}".format(path))
             if path.is_file():
                 name = str(path.relative_to(destination))
+                parts = path.relative_to(destination).parts
+                # PX4 copies a built bootloader into boards/<vendor>/<board>/extras.
+                # Preserve only that exact generated output, verified against
+                # its build-directory copy; unknown or edited files still fail.
+                if len(parts) == 3 and parts[1] == "extras":
+                    target = "orqa_" + parts[0] + "_bootloader"
+                    generated = px4 / "build" / target / (target + ".bin")
+                    if (parts[2] == target + ".bin"
+                            and (source / parts[0] / "bootloader.px4board").is_file()
+                            and generated.is_file() and not generated.is_symlink()
+                            and digest(path) == digest(generated)
+                            and name not in incoming and name not in previous):
+                        continue
                 existing[name] = digest(path)
                 if existing[name] not in (previous.get(name), incoming.get(name)):
                     raise ValueError("Preserve local board changes before installing: {}".format(path))

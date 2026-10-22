@@ -152,7 +152,7 @@ Release `v0.1.0-rc2` was built in GitHub Actions with PX4's digest-pinned
 
 | Target | FLASH usage | Result |
 |--------|-------------|--------|
-| `orqa_h7quadcore_default` | 1,532,256 / 1,572,864 bytes (97.42%) | Pass |
+| `orqa_h7quadcore_default` | 1,532,248 / 1,572,864 bytes (97.42%) | Pass |
 | `orqa_h7quadcore_bootloader` | 384 KB reserved region | Pass |
 | `orqa_h7wingcore_default` | 1,549,164 / 1,572,864 bytes (98.49%) | Pass |
 | `orqa_h7wingcore_bootloader` | 384 KB reserved region | Pass |
@@ -172,6 +172,8 @@ Every new build verifies board ID, bundle/raw-image equality, reset vector,
 ELF load address, partition size and at least 16 KiB of free application flash.
 Per-target `.manifest.json` files record source revisions, input hashes,
 artifact checksums and the measured budget.
+For bootloader builds, the installed board-tree hashes also include PX4's
+generated `extras/<target>_bootloader.bin`; its hash matches the released binary.
 
 ## What Needs Hardware Validation
 
