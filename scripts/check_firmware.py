@@ -42,12 +42,30 @@ def validate(bundle, raw, board, label, elf):
         raise ValueError("Expected a 32-bit little-endian ARM ELF")
     phoff = struct.unpack_from("<I", elf, 28)[0]
     phsize, phnum = struct.unpack_from("<HH", elf, 42)
-    loads = []
+    segments = []
     for index in range(phnum):
         kind, offset, vaddr, paddr, filesz, memsz, flags, align = struct.unpack_from(
             "<8I", elf, phoff + index * phsize)
-        if kind == 1 and filesz and 0x08000000 <= paddr < 0x08200000:
-            loads.append((paddr, paddr + filesz))
+        if kind == 1 and filesz:
+            segments.append((offset, paddr, filesz))
+    # LOAD segments can include ELF headers/page padding before the first
+    # allocated section (notably F405's 48 KiB start). objcopy's binary contains
+    # the allocated sections, not those headers. Map sections to their LMAs so
+    # initialized RAM data is also included in the flash extent.
+    shoff = struct.unpack_from("<I", elf, 32)[0]
+    shsize, shnum = struct.unpack_from("<HH", elf, 46)
+    loads = []
+    for index in range(shnum):
+        name, kind, flags, addr, offset, size, link, info, align, entsize = struct.unpack_from(
+            "<10I", elf, shoff + index * shsize)
+        if not flags & 2 or kind == 8 or not size:  # SHF_ALLOC, SHT_NOBITS
+            continue
+        for segment_offset, paddr, filesz in segments:
+            if segment_offset <= offset and offset + size <= segment_offset + filesz:
+                load_address = paddr + offset - segment_offset
+                if 0x08000000 <= load_address < 0x08200000:
+                    loads.append((load_address, load_address + size))
+                break
     if not loads or min(start for start, end in loads) != origin:
         raise ValueError("ELF load address does not match the bootloader layout")
     if max(end for start, end in loads) > origin + len(raw):

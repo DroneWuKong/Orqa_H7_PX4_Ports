@@ -30,12 +30,15 @@ class FirmwareTests(unittest.TestCase):
         self.raw = struct.pack("<II", 0x24001000, 0x08060009) + bytes(56)
         self.bundle = {"magic": "PX4FWv1", "board_id": 1204, "image_maxsize": 1572864, "image_size": len(self.raw),
                        "image": base64.b64encode(zlib.compress(self.raw)).decode()}
-        self.elf = bytearray(84)
+        self.elf = bytearray(164)
         self.elf[:7] = b"\x7fELF\x01\x01\x01"
         struct.pack_into("<H", self.elf, 18, 40)
         struct.pack_into("<I", self.elf, 28, 52)
+        struct.pack_into("<I", self.elf, 32, 84)
         struct.pack_into("<HH", self.elf, 42, 32, 1)
+        struct.pack_into("<HH", self.elf, 46, 40, 2)
         struct.pack_into("<8I", self.elf, 52, 1, 0, 0x08060000, 0x08060000, 64, 64, 5, 32)
+        struct.pack_into("<10I", self.elf, 124, 0, 1, 6, 0x08060000, 0, 64, 0, 0, 32, 0)
 
     def validate(self):
         return firmware.validate(self.bundle, self.raw, self.board, "default", self.elf)
@@ -47,6 +50,16 @@ class FirmwareTests(unittest.TestCase):
         self.raw = struct.pack("<II", 0x24001002, 0x08060009) + bytes(56)
         self.bundle["image"] = base64.b64encode(zlib.compress(self.raw)).decode()
         self.validate()
+
+    def test_f405_elf_segment_padding_before_application(self):
+        self.board.update(board_id=1155, app_origin=0x0800C000, app_size=999424)
+        self.raw = struct.pack("<II", 0x20001002, 0x0800C009) + bytes(56)
+        self.bundle.update(board_id=1155, image_maxsize=999424,
+                           image=base64.b64encode(zlib.compress(self.raw)).decode())
+        self.elf.extend(bytes(0xC040 - len(self.elf)))
+        struct.pack_into("<8I", self.elf, 52, 1, 0, 0x08000000, 0x08000000, 0xC040, 0xC040, 5, 0x10000)
+        struct.pack_into("<10I", self.elf, 124, 0, 1, 6, 0x0800C000, 0xC000, 64, 0, 0, 32, 0)
+        self.assertEqual(self.validate()["load_address"], "0x800c000")
 
     def test_wrong_board(self):
         self.bundle["board_id"] = 1013

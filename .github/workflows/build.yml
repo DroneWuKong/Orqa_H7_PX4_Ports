@@ -98,6 +98,19 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Retain diagnostics for a failed build or artifact check
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: diagnostics-${{ matrix.target }}
+          path: |
+            PX4-Autopilot/build/${{ matrix.target }}/*.elf
+            PX4-Autopilot/build/${{ matrix.target }}/*.bin
+            PX4-Autopilot/build/${{ matrix.target }}/*.px4
+            PX4-Autopilot/build/${{ matrix.target }}/parameters.xml
+          if-no-files-found: ignore
+          retention-days: 7
+
   release:
     name: Publish release assets
     if: startsWith(github.ref, 'refs/tags/')
