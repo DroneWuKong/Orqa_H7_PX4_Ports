@@ -6,6 +6,24 @@ the FC side of the **DTK APB**, and the **F405 Pro**.
 > **Status:** all seven application/bootloader targets are continuously built;
 > physical-board validation is still required before flight use.
 
+[![Build PX4 ports](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/actions/workflows/build.yml/badge.svg)](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/actions/workflows/build.yml)
+
+## Precompiled firmware
+
+The first hardened build is published as a **hardware-unvalidated prerelease**.
+Use the application `.px4` files with QGroundControl's **Custom firmware**
+option. Flash bootloader `.bin` files only through STM32 DFU and only if you
+intend to replace the installed bootloader.
+
+| Board | Application | Bootloader |
+|-------|-------------|------------|
+| H7 QuadCore | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_h7quadcore_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_h7quadcore_bootloader.bin) |
+| H7 Wingcore | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_h7wingcore_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_h7wingcore_bootloader.bin) |
+| DTK APB | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_apb_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_apb_bootloader.bin) |
+| F405 Pro | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_f405pro_default.px4) | Use the factory ArduPilot bootloader |
+
+[View all release assets and checksums](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/tag/v0.1.0-rc1).
+
 ---
 
 ## Hardware
