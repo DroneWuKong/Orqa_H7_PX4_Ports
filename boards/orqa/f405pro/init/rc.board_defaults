@@ -18,11 +18,13 @@ param set-default SYS_AUTOSTART 4001
 # External mag probing
 param set-default SYS_HAS_MAG 1
 
-# Ghost RC on USART1
-param set-default RC_GHST_PRT_CFG 300
+# RCInput auto-detects supported protocols (including Ghost) on USART1.
+param set-default RC_INPUT_PROTO -1
 
-# DShot by default
-param set-default DSHOT_CONFIG 300
+# PX4 v1.15 selects the output protocol per timer group (-4 = DShot300).
+param set-default PWM_MAIN_TIM0 -4
+param set-default PWM_MAIN_TIM1 -4
+param set-default PWM_MAIN_TIM2 -4
 
 # The hardware's motor numbering crosses timer groups. PX4 requires channels
 # from one timer to be contiguous, so explicitly bind functions to the grouped

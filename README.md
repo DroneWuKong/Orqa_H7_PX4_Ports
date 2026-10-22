@@ -3,6 +3,10 @@
 PX4 v1.15.4 board ports for the **Orqa H7 QuadCore**, **H7 Wingcore**,
 the FC side of the **DTK APB**, and the **F405 Pro**.
 
+This repository contains the board definitions plus a small, reviewed
+[PX4 storage patch](patches/0001-orqa-storage.patch). Use the installer below;
+copying only `boards/orqa` is no longer sufficient.
+
 > **Status:** all seven application/bootloader targets are continuously built;
 > physical-board validation is still required before flight use.
 
@@ -10,19 +14,19 @@ the FC side of the **DTK APB**, and the **F405 Pro**.
 
 ## Precompiled firmware
 
-The first hardened build is published as a **hardware-unvalidated prerelease**.
+The storage-hardened build is published as a **hardware-unvalidated prerelease**.
 Use the application `.px4` files with QGroundControl's **Custom firmware**
 option. Flash bootloader `.bin` files only through STM32 DFU and only if you
 intend to replace the installed bootloader.
 
 | Board | Application | Bootloader |
 |-------|-------------|------------|
-| H7 QuadCore | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_h7quadcore_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_h7quadcore_bootloader.bin) |
-| H7 Wingcore | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_h7wingcore_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_h7wingcore_bootloader.bin) |
-| DTK APB | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_apb_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_apb_bootloader.bin) |
-| F405 Pro | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_f405pro_default.px4) | Use the factory ArduPilot bootloader |
+| H7 QuadCore | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_h7quadcore_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_h7quadcore_bootloader.bin) |
+| H7 Wingcore | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_h7wingcore_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_h7wingcore_bootloader.bin) |
+| DTK APB | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_apb_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_apb_bootloader.bin) |
+| F405 Pro | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_f405pro_default.px4) | Use the factory ArduPilot bootloader |
 
-[View all release assets and checksums](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/tag/v0.1.0-rc1).
+[View all release assets and checksums](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/tag/v0.1.0-rc2).
 
 ---
 
@@ -34,8 +38,8 @@ The QuadCore and Wingcore are **the same PCB**. PX4 handles quad vs fixed-wing a
 |-----------|---------|
 | MCU | STM32H743VIH6 (LQFP-100) |
 | HSE Crystal | 8 MHz → 480 MHz SYSCLK |
-| IMU 1 | ICM-42688-P on SPI1 — CS=PA4, DRDY=PC3, rotation CW270 |
-| IMU 2 | ICM-42688-P on SPI4 — CS=PE11, DRDY=PE10, rotation CW180 |
+| IMU 1 | MPU6000/ICM-42688-P on SPI1 — CS=PA4, DRDY=PC3, rotation R12 |
+| IMU 2 | ICM-42688-P on SPI4 — CS=PE11, DRDY=PE10, rotation R14 |
 | Barometer | DPS310 on I2C2 @ 0x77 |
 | Magnetometer | QMC5883 on I2C1 (external) |
 | OSD | MAX7456 on SPI3 — CS=PA15 |
@@ -87,27 +91,74 @@ See [Build Verification](#build-verification) for the exact target list.
 - **QuadCore/Wingcore:** SDMMC1, the NuttX MMC/SD layer, and board startup are
   wired together in firmware. Card detect is not exposed, so firmware assumes
   a card is inserted. Mounting and sustained logging still need hardware tests.
+  Failed mounts no longer automatically format the card. Insert the card before
+  powering on; removal/reinsertion while running is not supported.
 - **DTK APB:** SD remains deliberately disabled. The only published provisional
   SDMMC2 map overlaps active flash, OSD, and ADC pins; enabling it without a
   confirmed APB schematic would corrupt other peripherals.
 - **F405 Pro:** the board has no microSD socket. SPI2 is the OSD bus, not an SD
   bus. Parameters and waypoints use the onboard SPI3 W25Q128 dataflash.
 
+### Storage hardening after rc1
+
+The rc1 F405 image compiled, but its SPI manifest selected PX4's FRAM driver;
+that did **not** establish working W25 storage. The storage patch adds explicit
+SPI NOR attachment through NuttX's W25 driver and fixes a zero-partition
+division during MTD initialization. All four application targets now use one
+shared, erase-aligned W25 partition definition and a conservative 10 MHz clock:
+
+| Board | Parameters | Missions, fences and rally points | Flight logs |
+|-------|------------|----------------------------------|-------------|
+| QuadCore / Wingcore | Existing internal flash sector | 256 KiB W25 partition on SPI2 | microSD |
+| APB | Existing internal flash sector | 256 KiB W25 partition on SPI2 | MAVLink streaming; SD disabled |
+| F405 Pro | 64 KiB W25 partition on SPI3 | Separate 256 KiB W25 partition on SPI3 | MAVLink streaming; no SD socket |
+
+`SYS_DM_BACKEND=0` selects the W25 mission partition when initialized, falling
+back to PX4's normal SD path if unavailable. Explicit RAM (`1`) and disabled
+(`-1`) selections are respected. W25 is not a filesystem for ULog files.
+These changes are source- and build-tested; physical persistence is still
+unverified. Save parameters and missions through QGroundControl before
+upgrading, and re-upload missions after changing storage backends. The new
+partitions may overwrite external-flash data from other firmware.
+
+H7 calibration remains in its existing internal-flash sector. Old SD parameter
+files are no longer imported automatically or used to trigger a reboot. If
+needed, import a reviewed backup explicitly with `param import <path>` followed
+by `param save`.
+
+H7 builds omit embedded command help text and four optional external I2C RGB
+controller drivers to recover flash space. Onboard GPIO status LEDs, flight
+modules, parameter metadata and diagnostic commands remain available. Enable
+`CONFIG_COMMON_LIGHT` in a custom build if an external RGB controller is needed,
+then recheck its flash budget. Consult the
+[PX4 module reference](https://docs.px4.io/v1.15/en/modules/) for command usage.
+QuadCore/Wingcore now include `sd_bench` and `sd_stress`; see
+[bench validation](docs/bench-validation.md) for the storage test procedure.
+
+Output protocols use PX4 v1.15's `PWM_MAIN_TIMn` parameters; the obsolete
+`DSHOT_CONFIG` setting has been removed. QuadCore, APB and F405 default their
+motor timer groups to DShot300. On H7, PWM9 shares TIM4 with PWM7/8 and cannot
+drive a conventional servo while that group is DShot; PWM10/11 have a separate
+50 Hz servo timer. Wingcore defaults all groups to 50 Hz PWM and leaves actuator
+functions for aircraft-specific setup in QGroundControl. Verify every output
+and its direction with propellers removed, especially after upgrading existing
+settings: board defaults do not overwrite explicitly saved parameter values.
+
 ## Build Verification
 
-Release `v0.1.0-rc1` was built in GitHub Actions with PX4's pinned
+Release `v0.1.0-rc2` was built in GitHub Actions with PX4's digest-pinned
 `px4io/px4-dev-nuttx-focal` image and GCC 9.3.1 against a clean recursive PX4
 **v1.15.4** checkout:
 
 | Target | FLASH usage | Result |
 |--------|-------------|--------|
-| `orqa_h7quadcore_default` | 1,531,688 / 1,572,864 bytes (97.38%) | Pass |
+| `orqa_h7quadcore_default` | 1,532,256 / 1,572,864 bytes (97.42%) | Pass |
 | `orqa_h7quadcore_bootloader` | 384 KB reserved region | Pass |
-| `orqa_h7wingcore_default` | 1,548,628 / 1,572,864 bytes (98.46%) | Pass |
+| `orqa_h7wingcore_default` | 1,549,164 / 1,572,864 bytes (98.49%) | Pass |
 | `orqa_h7wingcore_bootloader` | 384 KB reserved region | Pass |
-| `orqa_apb_default` | 1,525,324 / 1,572,864 bytes (96.98%) | Pass |
+| `orqa_apb_default` | 1,522,380 / 1,572,864 bytes (96.79%) | Pass |
 | `orqa_apb_bootloader` | 384 KB reserved region | Pass |
-| `orqa_f405pro_default` | 951,729 / 999,424 bytes (95.23%) | Pass |
+| `orqa_f405pro_default` | 957,425 / 999,424 bytes (95.80%) | Pass |
 
 The 1536 KB app partition (a consequence of the 384 KB ArduPilot-compatible
 bootloader reservation) does not fit PX4's full "everything" module set, so
@@ -117,6 +168,10 @@ multirotor (`SYS_AUTOSTART 4001`), wingcore is fixed-wing (`SYS_AUTOSTART
 their parameters). Optional payload/legacy modules (SIH sim, gyro-FFT, DDS,
 landing-target, and camera/gimbal/smart-battery drivers) are trimmed to fit.
 The build matrix is the source of truth for continued flash-fit checks.
+Every new build verifies board ID, bundle/raw-image equality, reset vector,
+ELF load address, partition size and at least 16 KiB of free application flash.
+Per-target `.manifest.json` files record source revisions, input hashes,
+artifact checksums and the measured budget.
 
 ## What Needs Hardware Validation
 
@@ -149,7 +204,7 @@ The build matrix is the source of truth for continued flash-fit checks.
 ## Prerequisites
 
 - [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/) (Windows) or Docker (Linux/macOS)
-- Git
+- Git and Python 3.8 or newer
 - WSL2 (Windows only — required for Docker build)
 - 8 GB RAM recommended
 
@@ -178,14 +233,16 @@ parent/
 ./build.sh orqa_h7quadcore_default
 ```
 
-The wrapper copies the current board definitions into the PX4 checkout and
-uses the pinned PX4 NuttX Docker image. Pass any target from the table above.
+The wrapper verifies the exact PX4 v1.15.4 commit, installs the board definitions
+and storage patch, then uses the pinned PX4 NuttX Docker image. Pass any target
+from the table above. The installer can be rerun and refuses to overwrite local
+edits. Use a fresh PX4 checkout when upgrading an older manually copied overlay.
 
 ### 3. Build directly (Linux/macOS)
 
 ```bash
-cp -a boards/orqa PX4-Autopilot/boards/
-cd PX4-Autopilot
+python3 scripts/install.py ../PX4-Autopilot
+cd ../PX4-Autopilot
 make orqa_h7quadcore_default    # quad
 make orqa_h7wingcore_default    # fixed-wing
 ```
@@ -300,30 +357,35 @@ BOOT), and the factory bootloader also exposes DFU reboot (`ENABLE_DFU_BOOT`).
 
 | UART | TX | RX | Default Function |
 |------|----|----|-----------------|
-| USART3 | PD8 | PD9 | RC Input (GHST) |
+| USART3 | PD8 | PD9 | RC Input (protocol autodetection, including GHST) |
 | USART6 | PC6 | PC7 | MAVLink Telemetry |
 | UART7 | PE8 | PE7 | GPS |
 | UART8 | — | PE0 | ESC Telemetry (RX only) |
 
 ### Motor / Servo Outputs
 
-| Output | Pin | Timer | Channel | Function |
+The PX4 output numbers below follow `timer_config.cpp` and the QGroundControl
+actuator screen. They differ from the PCB's motor labels; assign functions and
+test the actual motor order during setup. `RC_SERIAL_PORT` now explicitly binds
+the H7 RC input driver to USART3 (`/dev/ttyS0`), with protocol autodetection.
+
+| PX4 output | Pin | Timer | Channel | PCB label |
 |--------|-----|-------|---------|----------|
-| PWM1 | PD12 | TIM4 | CH1 | Motor 1 |
-| PWM2 | PD13 | TIM4 | CH2 | Motor 2 |
+| PWM1 | PB0 | TIM3 | CH3 | Motor 8 |
+| PWM2 | PB1 | TIM3 | CH4 | Motor 7 |
 | PWM3 | PA1 | TIM2 | CH2 | Motor 3 |
 | PWM4 | PA0 | TIM2 | CH1 | Motor 4 |
 | PWM5 | PA2 | TIM2 | CH3 | Motor 5 |
 | PWM6 | PA3 | TIM2 | CH4 | Motor 6 |
-| PWM7 | PB1 | TIM3 | CH4 | Motor 7 |
-| PWM8 | PB0 | TIM3 | CH3 | Motor 8 |
-| PWM9 | PD14 | TIM4 | CH3 | Servo 3 / Wingcore Aileron |
-| PWM10 | PE5 | TIM15 | CH1 | Servo 2 / Wingcore Elevator |
+| PWM7 | PD13 | TIM4 | CH2 | Motor 1 |
+| PWM8 | PD12 | TIM4 | CH1 | Motor 2 |
+| PWM9 | PD14 | TIM4 | CH3 | Servo 3; shares protocol with PWM7/8 |
+| PWM10 | PE5 | TIM15 | CH1 | Servo 2 |
 | PWM11 | PE6 | TIM15 | CH2 | Servo 1 |
 
-### IMU Rotations (Verified)
+### IMU Rotations (Source-derived)
 
-Rotations verified from PCB layout analysis, physical measurement, and cross-referenced against [ORQA's official PX4 fork](https://github.com/orqafpv/PX4-Autopilot/tree/develop_h743-3030-pro). See [`boards/orqa/h7quadcore/docs/`](boards/orqa/h7quadcore/docs/) for PCB layout images.
+Rotations are based on PCB layout analysis and cross-referenced against [ORQA's official PX4 fork](https://github.com/orqafpv/PX4-Autopilot/tree/develop_h743-3030-pro). See [`boards/orqa/h7quadcore/docs/`](boards/orqa/h7quadcore/docs/) for PCB layout images. Confirm axes on each physical board revision before flight.
 
 | IMU | Bus | Mount | Physical | PX4 Rotation |
 |-----|-----|-------|----------|--------------|

@@ -120,6 +120,11 @@
 #define HRT_TIMER               8  /* not used by motor or servo outputs */
 #define HRT_TIMER_CHANNEL       1  /* use capture/compare channel 1 */
 
+/* RCInput's startup uses this device; BOARD_SERIAL_RC alone only generates
+ * serial-port metadata. USART3 has RX and TX for supported RC telemetry. */
+#define RC_SERIAL_PORT "/dev/ttyS0"
+#define BOARD_SUPPORTS_RC_SERIAL_PORT_OUTPUT
+
 /* RC Serial port */
 
 #define PWMIN_TIMER                       12

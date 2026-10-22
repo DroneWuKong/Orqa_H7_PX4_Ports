@@ -37,33 +37,48 @@
 #include <nuttx/spi/spi.h>
 #include <px4_platform_common/px4_manifest.h>
 
-static const px4_mft_device_t spi3 = {
-	.bus_type = px4_mft_device_t::SPI,
+/*
+ * W25Q128 has 256-byte pages and 4 KiB erase sectors. Keep partition sizes
+ * erase-aligned. H7 parameters remain in internal flash so existing rc1
+ * calibration survives an upgrade. F405 parameters start at flash offset 0.
+ * Mission storage is 256 KiB, sufficient for both PX4 mission banks, fence
+ * points and rally points. This is not a ULog filesystem.
+ */
+#if defined(CONFIG_W25_SECTOR512)
+# error "Orqa partitions require native W25 256-byte blocks"
+#endif
+
+static const px4_mft_device_t spi_flash = {
+	.bus_type = px4_mft_device_t::SPI_NOR,
 	.devid = SPIDEV_FLASH(0)
 };
 
 static const px4_mtd_entry_t onboard_flash = {
-	.device = &spi3,
+	.device = &spi_flash,
+#if defined(FLASH_BASED_PARAMS)
+	.npart = 1,
+#else
 	.npart = 2,
+#endif
 	.partd = {
+#if !defined(FLASH_BASED_PARAMS)
 		{
 			.type = MTD_PARAMETERS,
 			.path = "/fs/mtd_params",
-			.nblocks = 32
+			.nblocks = 64 * 1024 / 256
 		},
+#endif
 		{
 			.type = MTD_WAYPOINTS,
 			.path = "/fs/mtd_waypoints",
-			.nblocks = 32
+			.nblocks = 256 * 1024 / 256
 		}
 	}
 };
 
 static const px4_mtd_manifest_t board_mtd_config = {
 	.nconfigs = 1,
-	.entries = {
-		&onboard_flash
-	}
+	.entries = { &onboard_flash }
 };
 
 static const px4_mft_entry_s mtd_mft = {
@@ -73,9 +88,7 @@ static const px4_mft_entry_s mtd_mft = {
 
 static const px4_mft_s mft = {
 	.nmft = 1,
-	.mfts = {
-		&mtd_mft
-	}
+	.mfts = { &mtd_mft }
 };
 
 const px4_mft_s *board_get_manifest(void)

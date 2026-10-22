@@ -18,10 +18,32 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  checks:
+    name: Storage and build regression checks
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: port
+      - uses: actions/checkout@v7
+        with:
+          repository: PX4/PX4-Autopilot
+          ref: 99c40407ffd7ac184e2d7b4b293f36f10fe561ef # v1.15.4
+          path: PX4-Autopilot
+      - name: Test installer and firmware rejection paths
+        working-directory: port
+        run: python3 -m unittest discover -s tests -v
+      - name: Install and verify pinned storage changes
+        run: |
+          git -C PX4-Autopilot fetch --depth=1 origin tag v1.15.4
+          python3 port/scripts/install.py PX4-Autopilot
+          python3 port/scripts/check_storage.py PX4-Autopilot
+
   build:
     name: ${{ matrix.target }}
     runs-on: ubuntu-22.04
-    container: px4io/px4-dev-nuttx-focal:2022-08-12
+    container: px4io/px4-dev-nuttx-focal:2022-08-12@sha256:30881ed09e03f0512ac84351c75a4b564431cad868aca8634b033042c153e6c4
+    needs: checks
     strategy:
       fail-fast: false
       matrix:
@@ -44,15 +66,17 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: PX4/PX4-Autopilot
-          ref: v1.15.4
+          ref: 99c40407ffd7ac184e2d7b4b293f36f10fe561ef # v1.15.4
           submodules: recursive
           path: PX4-Autopilot
 
       - name: Fetch NuttX version tags
-        run: git -C PX4-Autopilot/platforms/nuttx/NuttX/nuttx fetch --tags --force
+        run: |
+          git -C PX4-Autopilot fetch --depth=1 origin tag v1.15.4
+          git -C PX4-Autopilot/platforms/nuttx/NuttX/nuttx fetch --tags --force
 
-      - name: Install Orqa board definitions
-        run: cp -a port/boards/orqa PX4-Autopilot/boards/
+      - name: Install Orqa board definitions and storage fixes
+        run: python3 port/scripts/install.py PX4-Autopilot
 
       - name: Build
         working-directory: PX4-Autopilot
@@ -60,9 +84,10 @@ jobs:
 
       - name: Collect firmware
         run: |
+          python3 port/scripts/check_firmware.py PX4-Autopilot ${{ matrix.target }}
           mkdir -p artifacts
           find "PX4-Autopilot/build/${{ matrix.target }}" -maxdepth 1 -type f \
-            \( -name '*.px4' -o -name '*.bin' \) -exec cp '{}' artifacts/ \;
+            \( -name '*.px4' -o -name '*.bin' -o -name '*.manifest.json' \) -exec cp '{}' artifacts/ \;
           test -n "$(find artifacts -maxdepth 1 -type f -print -quit)"
 
       - name: Upload firmware
@@ -72,6 +97,19 @@ jobs:
           path: artifacts/*
           if-no-files-found: error
           retention-days: 30
+
+      - name: Retain diagnostics for a failed build or artifact check
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: diagnostics-${{ matrix.target }}
+          path: |
+            PX4-Autopilot/build/${{ matrix.target }}/*.elf
+            PX4-Autopilot/build/${{ matrix.target }}/*.bin
+            PX4-Autopilot/build/${{ matrix.target }}/*.px4
+            PX4-Autopilot/build/${{ matrix.target }}/parameters.xml
+          if-no-files-found: ignore
+          retention-days: 7
 
   release:
     name: Publish release assets
@@ -91,7 +129,11 @@ jobs:
 
       - name: Generate checksums
         working-directory: release-assets
-        run: sha256sum * > SHA256SUMS
+        run: |
+          test "$(find . -maxdepth 1 -name '*.px4' | wc -l)" -eq 7
+          test "$(find . -maxdepth 1 -name '*.bin' | wc -l)" -eq 7
+          test "$(find . -maxdepth 1 -name '*.manifest.json' | wc -l)" -eq 7
+          sha256sum * > SHA256SUMS
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v3

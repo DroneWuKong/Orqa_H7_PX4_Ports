@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Mamba F405 MK2 specific board extras init
+# Orqa F405 Pro board extras init
 #------------------------------------------------------------------------------
 
 if ! param compare OSD_ATXXXX_CFG 0
