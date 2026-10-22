@@ -20,7 +20,7 @@
 #           dfu-util -a 0 --dfuse-address 0x08000000 -D \
 #             ../PX4-Autopilot/build/orqa_h7quadcore_bootloader/orqa_h7quadcore_bootloader.bin
 #   Step 2: Unplug/replug USB (no BOOT button) then flash via QGroundControl or:
-#           ./build.sh orqa_h7quadcore_default upload
+#           ./build.sh orqa_h7quadcore_default
 
 set -euo pipefail
 
@@ -36,8 +36,17 @@ fi
 CCACHE_DIR="${HOME}/.ccache"
 TARGET="${1:-orqa_h7quadcore_default}"
 
-if [ ! -d "${PX4_SRC}" ]; then
-  echo "ERROR: PX4-Autopilot not found at ${PX4_SRC}"
+case "$TARGET" in
+  orqa_h7quadcore_default|orqa_h7quadcore_bootloader|orqa_h7wingcore_default|orqa_h7wingcore_bootloader|orqa_apb_default|orqa_apb_bootloader|orqa_f405pro_default) ;;
+  *) echo "ERROR: Unsupported target: $TARGET" >&2; exit 1 ;;
+esac
+if [ "$#" -gt 1 ]; then
+  echo "ERROR: Pass one build target; this wrapper does not flash hardware." >&2
+  exit 1
+fi
+
+if [ ! -d "${PX4_SRC:-}" ]; then
+  echo "ERROR: PX4-Autopilot not found at ${PX4_SRC:-<not configured>}"
   echo "Clone PX4-Autopilot at tag v1.15.4 as a sibling directory of this project:"
   echo "  cd $(dirname "${SCRIPT_DIR}")"
   echo "  git clone --branch v1.15.4 --recurse-submodules https://github.com/PX4/PX4-Autopilot.git"
@@ -46,9 +55,9 @@ fi
 
 mkdir -p "${CCACHE_DIR}"
 
-# Keep the PX4 checkout's Orqa definitions in sync with this repository.
-mkdir -p "${PX4_SRC}/boards/orqa"
-cp -a "${SCRIPT_DIR}/boards/orqa/." "${PX4_SRC}/boards/orqa/"
+# Install the version-checked overlay and required upstream storage fixes.
+# The installer refuses to overwrite local edits in an existing overlay.
+python3 "${SCRIPT_DIR}/scripts/install.py" "${PX4_SRC}"
 
 # Docker on Windows requires Windows-style paths (G:/...) not Git Bash paths (/g/...)
 if command -v cygpath &>/dev/null; then
@@ -74,7 +83,9 @@ MSYS_NO_PATHCONV=1 docker run --rm \
   --mount "type=bind,source=${CCACHE_DIR_DOCKER},target=/ccache" \
   --workdir="/px4" \
   px4io/px4-dev-nuttx-focal:2022-08-12 \
-  /bin/bash -c "make ${TARGET}"
+  /bin/bash -c 'exec make "$1"' -- "${TARGET}"
+
+python3 "${SCRIPT_DIR}/scripts/check_firmware.py" "${PX4_SRC}" "${TARGET}"
 
 echo "========================================"
 echo "  Build complete: ${TARGET}"

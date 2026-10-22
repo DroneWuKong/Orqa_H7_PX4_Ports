@@ -1,0 +1,11 @@
+{
+  "px4_revision": "99c40407ffd7ac184e2d7b4b293f36f10fe561ef",
+  "px4_version": "v1.15.4",
+  "container": "px4io/px4-dev-nuttx-focal:2022-08-12",
+  "boards": {
+    "h7quadcore": {"board_id": 1204, "app_origin": 134610944, "app_size": 1572864, "min_free": 16384},
+    "h7wingcore": {"board_id": 1204, "app_origin": 134610944, "app_size": 1572864, "min_free": 16384},
+    "apb": {"board_id": 1189, "app_origin": 134610944, "app_size": 1572864, "min_free": 16384},
+    "f405pro": {"board_id": 1155, "app_origin": 134266880, "app_size": 999424, "min_free": 16384}
+  }
+}

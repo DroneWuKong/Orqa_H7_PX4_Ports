@@ -1,0 +1,114 @@
+diff --git a/ROMFS/px4fmu_common/init.d/rcS b/ROMFS/px4fmu_common/init.d/rcS
+index c0b895a..2bbba25 100644
+--- a/ROMFS/px4fmu_common/init.d/rcS
++++ b/ROMFS/px4fmu_common/init.d/rcS
+@@ -60,7 +60,9 @@ then
+ 		fi
+ 	fi
+ 
+-	if [ $SDCARD_AVAILABLE = no -o $SDCARD_FORMAT = yes ]
++	# A failed mount can mean a damaged card, not a request to erase it.
++	# Format only when explicitly requested by the .format marker.
++	if [ $SDCARD_FORMAT = yes ]
+ 	then
+ 		echo "INFO [init] formatting /dev/mmcsd0"
+ 		set STARTUP_TUNE 15 # tune 15 = SD_ERROR (overridden to SD_INIT if format + mount succeeds)
+@@ -81,6 +83,12 @@ then
+ 		fi
+ 	fi
+ 
++	if [ $SDCARD_AVAILABLE = no ]
++	then
++		echo "ERROR [init] SD card mount failed; card left unchanged"
++		set STARTUP_TUNE 15
++	fi
++
+ 	if [ $SDCARD_AVAILABLE = yes ]
+ 	then
+ 		if hardfault_log check
+@@ -242,8 +250,12 @@ else
+ 	else
+ 		if param compare SYS_DM_BACKEND 0
+ 		then
+-			# dataman start default
+-			dataman start
++			if mft query -q -k MTD -s MTD_WAYPOINTS -v /fs/mtd_waypoints
++			then
++				dataman start -f /fs/mtd_waypoints
++			else
++				dataman start
++			fi
+ 		fi
+ 	fi
+ 
+diff --git a/platforms/common/include/px4_platform_common/px4_manifest.h b/platforms/common/include/px4_platform_common/px4_manifest.h
+index fc83418..cba1539 100644
+--- a/platforms/common/include/px4_platform_common/px4_manifest.h
++++ b/platforms/common/include/px4_platform_common/px4_manifest.h
+@@ -49,7 +49,8 @@ typedef struct  {
+ 		I2C = 0,
+ 		SPI = 1,
+ 		ONCHIP = 2,
+-		FLEXSPI = 3
++		FLEXSPI = 3,
++		SPI_NOR = 4
+ 	} bus_type;
+ 
+ 	uint32_t devid;
+diff --git a/platforms/nuttx/src/px4/common/px4_mtd.cpp b/platforms/nuttx/src/px4/common/px4_mtd.cpp
+index 24d88ed..95da34b 100644
+--- a/platforms/nuttx/src/px4/common/px4_mtd.cpp
++++ b/platforms/nuttx/src/px4/common/px4_mtd.cpp
+@@ -67,6 +67,31 @@ static int num_instances = 0;
+ static int total_blocks = 0;
+ static mtd_instance_s *instances[MAX_MTD_INSTANCES] = {};
+ 
++static int spi_nor_attach(mtd_instance_s &instance)
++{
++#if defined(CONFIG_MTD_W25)
++	struct spi_dev_s *spi = px4_spibus_initialize(px4_find_spi_bus(instance.devid));
++
++	if (spi == nullptr) {
++		PX4_ERR("failed to locate SPI NOR bus");
++		return -ENXIO;
++	}
++
++	// The W25 driver owns SPI mode, clock and JEDEC identification.
++	instance.mtd_dev = w25_initialize(spi);
++
++	if (instance.mtd_dev == nullptr) {
++		PX4_ERR("failed to initialize W25 flash");
++		return -ENODEV;
++	}
++
++	return 0;
++#else
++	PX4_ERR("Misconfiguration CONFIG_MTD_W25 not set");
++	return -ENXIO;
++#endif
++}
++
+ 
+ static int ramtron_attach(mtd_instance_s &instance)
+ {
+@@ -200,7 +225,9 @@ int px4_mtd_get_geometry(const mtd_instance_s *instance, unsigned long *blocksiz
+ 	 */
+ 
+ 	*blkpererase = geo.erasesize / geo.blocksize;
+-	*nblocks     = (geo.neraseblocks / instance->n_partitions_current) * *blkpererase;
++	// Before the first partition is registered, report the whole device.
++	const unsigned partitions = instance->n_partitions_current ? instance->n_partitions_current : 1;
++	*nblocks     = (geo.neraseblocks / partitions) * *blkpererase;
+ 	*partsize    = *nblocks * geo.blocksize;
+ 
+ 	return ret;
+@@ -351,6 +378,9 @@ memoryout:
+ 
+ 		} else if (mtd_list->entries[num_entry]->device->bus_type == px4_mft_device_t::SPI) {
+ 			rv = ramtron_attach(*instances[i]);
++
++		} else if (mtd_list->entries[num_entry]->device->bus_type == px4_mft_device_t::SPI_NOR) {
++			rv = spi_nor_attach(*instances[i]);
+ #if defined(HAS_FLEXSPI)
+ 
+ 		} else if (mtd_list->entries[num_entry]->device->bus_type == px4_mft_device_t::FLEXSPI) {

@@ -3,15 +3,8 @@
 # ORQA H7 Wingcore board specific defaults
 #------------------------------------------------------------------------------
 
-# Transition from params file to flash-based params
-if [ -f $PARAM_FILE ]
-then
-	param load $PARAM_FILE
-	param save
-	# create a backup
-	mv $PARAM_FILE ${PARAM_FILE}.bak
-	reboot
-fi
+# Parameters remain in internal flash across upgrades. Import an old SD
+# parameter file explicitly; never overwrite calibration or reboot on insert.
 
 # Battery voltage divider: 10K + 1.2K network
 param set-default BAT1_V_DIV 9.2931

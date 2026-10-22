@@ -3,15 +3,8 @@
 # ORQA DTK APB (STM32H743 FC) board specific defaults
 #------------------------------------------------------------------------------
 
-# Transition from params file to flash-based params
-if [ -f $PARAM_FILE ]
-then
-	param load $PARAM_FILE
-	param save
-	# create a backup
-	mv $PARAM_FILE ${PARAM_FILE}.bak
-	reboot
-fi
+# Parameters remain in internal flash across upgrades. Import an old SD
+# parameter file explicitly; never overwrite calibration or reboot on insert.
 
 # Battery voltage divider: 10K + 1.2K network
 # BF: vbat_scale=112, div=1, mult=12 => effective ratio ~11.0
