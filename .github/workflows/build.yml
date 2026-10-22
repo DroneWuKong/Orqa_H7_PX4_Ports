@@ -30,17 +30,21 @@ jobs:
 
     steps:
       - name: Check out port repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: port
 
       - name: Check out PX4 v1.15.4
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: PX4/PX4-Autopilot
           ref: v1.15.4
+          fetch-depth: 0
           submodules: recursive
           path: PX4-Autopilot
+
+      - name: Fetch NuttX version tags
+        run: git -C PX4-Autopilot/platforms/nuttx/NuttX/nuttx fetch --tags --force
 
       - name: Install Orqa board definitions
         run: cp -a port/boards/orqa PX4-Autopilot/boards/
@@ -57,7 +61,7 @@ jobs:
           test -n "$(find artifacts -maxdepth 1 -type f -print -quit)"
 
       - name: Upload firmware
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.target }}
           path: artifacts/*
