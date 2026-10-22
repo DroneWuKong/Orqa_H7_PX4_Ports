@@ -112,6 +112,7 @@
  */
 #define DIRECT_PWM_OUTPUT_CHANNELS      8
 #define DIRECT_INPUT_TIMER_CHANNELS     8
+#define BOARD_NUM_IO_TIMERS             3
 
 // Has pwm outputs
 #define BOARD_HAS_PWM    DIRECT_PWM_OUTPUT_CHANNELS
