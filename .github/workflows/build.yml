@@ -1,0 +1,101 @@
+name: Build PX4 ports
+
+on:
+  push:
+    branches:
+      - master
+      - "codex/**"
+    tags:
+      - "v*"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.target }}
+    runs-on: ubuntu-22.04
+    container: px4io/px4-dev-nuttx-focal:2022-08-12
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - orqa_h7quadcore_default
+          - orqa_h7quadcore_bootloader
+          - orqa_h7wingcore_default
+          - orqa_h7wingcore_bootloader
+          - orqa_apb_default
+          - orqa_apb_bootloader
+          - orqa_f405pro_default
+
+    steps:
+      - name: Check out port repository
+        uses: actions/checkout@v7
+        with:
+          path: port
+
+      - name: Check out PX4 v1.15.4
+        uses: actions/checkout@v7
+        with:
+          repository: PX4/PX4-Autopilot
+          ref: v1.15.4
+          submodules: recursive
+          path: PX4-Autopilot
+
+      - name: Fetch NuttX version tags
+        run: git -C PX4-Autopilot/platforms/nuttx/NuttX/nuttx fetch --tags --force
+
+      - name: Install Orqa board definitions
+        run: cp -a port/boards/orqa PX4-Autopilot/boards/
+
+      - name: Build
+        working-directory: PX4-Autopilot
+        run: make ${{ matrix.target }}
+
+      - name: Collect firmware
+        run: |
+          mkdir -p artifacts
+          find "PX4-Autopilot/build/${{ matrix.target }}" -maxdepth 1 -type f \
+            \( -name '*.px4' -o -name '*.bin' \) -exec cp '{}' artifacts/ \;
+          test -n "$(find artifacts -maxdepth 1 -type f -print -quit)"
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.target }}
+          path: artifacts/*
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: Publish release assets
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all firmware artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: orqa_*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Generate checksums
+        working-directory: release-assets
+        run: sha256sum * > SHA256SUMS
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v3
+        with:
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: release-assets/*

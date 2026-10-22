@@ -23,3 +23,15 @@ param set-default RC_GHST_PRT_CFG 300
 
 # DShot by default
 param set-default DSHOT_CONFIG 300
+
+# The hardware's motor numbering crosses timer groups. PX4 requires channels
+# from one timer to be contiguous, so explicitly bind functions to the grouped
+# channel order used by timer_config.cpp.
+param set-default PWM_MAIN_FUNC1 101  # Motor 1 (PA3)
+param set-default PWM_MAIN_FUNC2 104  # Motor 4 (PA2)
+param set-default PWM_MAIN_FUNC3 105  # Motor 5 (PA0)
+param set-default PWM_MAIN_FUNC4 106  # Motor 6 (PA1)
+param set-default PWM_MAIN_FUNC5 102  # Motor 2 (PB0)
+param set-default PWM_MAIN_FUNC6 103  # Motor 3 (PB1)
+param set-default PWM_MAIN_FUNC7 107  # Motor 7 (PC8)
+param set-default PWM_MAIN_FUNC8 108  # Motor 8 (PC9)

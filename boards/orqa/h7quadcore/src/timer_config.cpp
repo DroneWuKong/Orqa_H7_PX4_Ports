@@ -35,14 +35,14 @@
  * PWM output configuration — ORQA H7
  * Matched to ORQA official PX4 fork (orqafpv/PX4-Autopilot develop_h743-3030-pro)
  *
- * WARNING: As of Feb 2025, enabling CAN bus disables all Timer5 outputs (PX4 bug)
+ * PA0-PA3 use Timer2 so UAVCAN does not disable motor outputs through Timer5.
  */
 
 #include <px4_arch/io_timer_hw_description.h>
 
 constexpr io_timers_t io_timers[MAX_IO_TIMERS] = {
 	initIOTimer(Timer::Timer3, DMA{DMA::Index1, DMA::Stream2, DMA::Channel5}),
-	initIOTimer(Timer::Timer5, DMA{DMA::Index1, DMA::Stream0, DMA::Channel6}),
+	initIOTimer(Timer::Timer2, DMA{DMA::Index1, DMA::Stream1, DMA::Channel3}),
 	initIOTimer(Timer::Timer4, DMA{DMA::Index1, DMA::Stream6, DMA::Channel2}),
 	initIOTimer(Timer::Timer15),
 };
@@ -51,10 +51,10 @@ constexpr timer_io_channels_t timer_io_channels[MAX_TIMER_IO_CHANNELS] = {
 	// Motors (PWM/DShot)
 	initIOTimerChannel(io_timers, {Timer::Timer3, Timer::Channel3}, {GPIO::PortB, GPIO::Pin0}),   // MOTOR_8 MFC Connector J6
 	initIOTimerChannel(io_timers, {Timer::Timer3, Timer::Channel4}, {GPIO::PortB, GPIO::Pin1}),   // MOTOR_7 MFC Connector J6
-	initIOTimerChannel(io_timers, {Timer::Timer5, Timer::Channel2}, {GPIO::PortA, GPIO::Pin1}),   // MOTOR_3 ESC Connector J2
-	initIOTimerChannel(io_timers, {Timer::Timer5, Timer::Channel1}, {GPIO::PortA, GPIO::Pin0}),   // MOTOR_4 ESC Connector J2
-	initIOTimerChannel(io_timers, {Timer::Timer5, Timer::Channel3}, {GPIO::PortA, GPIO::Pin2}),   // MOTOR_5 MFC Connector J6
-	initIOTimerChannel(io_timers, {Timer::Timer5, Timer::Channel4}, {GPIO::PortA, GPIO::Pin3}),   // MOTOR_6 MFC Connector J6
+	initIOTimerChannel(io_timers, {Timer::Timer2, Timer::Channel2}, {GPIO::PortA, GPIO::Pin1}),   // MOTOR_3 ESC Connector J2
+	initIOTimerChannel(io_timers, {Timer::Timer2, Timer::Channel1}, {GPIO::PortA, GPIO::Pin0}),   // MOTOR_4 ESC Connector J2
+	initIOTimerChannel(io_timers, {Timer::Timer2, Timer::Channel3}, {GPIO::PortA, GPIO::Pin2}),   // MOTOR_5 MFC Connector J6
+	initIOTimerChannel(io_timers, {Timer::Timer2, Timer::Channel4}, {GPIO::PortA, GPIO::Pin3}),   // MOTOR_6 MFC Connector J6
 	initIOTimerChannel(io_timers, {Timer::Timer4, Timer::Channel2}, {GPIO::PortD, GPIO::Pin13}),  // MOTOR_1 ESC Connector J2
 	initIOTimerChannel(io_timers, {Timer::Timer4, Timer::Channel1}, {GPIO::PortD, GPIO::Pin12}),  // MOTOR_2 ESC Connector J2
 

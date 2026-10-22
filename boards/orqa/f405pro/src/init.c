@@ -58,7 +58,6 @@
 #include <nuttx/board.h>
 #include <nuttx/spi/spi.h>
 #include <nuttx/i2c/i2c_master.h>
-#include <nuttx/mmcsd.h>
 #include <nuttx/analog/adc.h>
 #include <nuttx/mm/gran.h>
 
@@ -76,10 +75,6 @@
 #include <px4_arch/io_timer.h>
 #include <px4_platform_common/init.h>
 #include <px4_platform/board_dma_alloc.h>
-
-# if defined(FLASH_BASED_PARAMS)
-#  include <parameters/flashparams/flashfs.h>
-#endif
 
 /****************************************************************************
  * Pre-Processor Definitions
@@ -166,7 +161,6 @@ stm32_boardinitialize(void)
 	/* configure ADC pins */
 	stm32_configgpio(GPIO_ADC1_IN11);	/* BATT_VOLTAGE_SENS */
 	stm32_configgpio(GPIO_ADC1_IN13);	/* BATT_CURRENT_SENS */
-	stm32_configgpio(GPIO_ADC1_IN12);	/* RSSI analog in (TX of UART4 instead) */
 
 	// TODO: power peripherals
 	///* configure power supply control/sense pins */
@@ -231,7 +225,6 @@ stm32_boardinitialize(void)
  ****************************************************************************/
 
 static struct spi_dev_s *spi1;
-static struct spi_dev_s *spi2;
 static struct spi_dev_s *spi3;
 
 __EXPORT int board_app_initialize(uintptr_t arg)
@@ -276,29 +269,7 @@ __EXPORT int board_app_initialize(uintptr_t arg)
 	SPI_SETMODE(spi1, SPIDEV_MODE3);
 	up_udelay(20);
 
-	// SPI2: SDCard
-	/* Get the SPI port for the microSD slot */
-	spi2 = stm32_spibus_initialize(CONFIG_NSH_MMCSDSPIPORTNO);
-
-	if (!spi2) {
-		syslog(LOG_ERR, "[boot] FAILED to initialize SPI port %d\n", CONFIG_NSH_MMCSDSPIPORTNO);
-		led_on(LED_BLUE);
-		return -ENODEV;
-	}
-
-	/* Now bind the SPI interface to the MMCSD driver */
-	int result = mmcsd_spislotinitialize(CONFIG_NSH_MMCSDMINOR, CONFIG_NSH_MMCSDSLOTNO, spi2);
-
-	if (result != OK) {
-		led_on(LED_BLUE);
-		syslog(LOG_ERR, "[boot] FAILED to bind SPI port 2 to the MMCSD driver\n");
-		return -ENODEV;
-	}
-
-	up_udelay(20);
-
-
-	// SPI3: OSD / Baro
+	// SPI3: W25Q128 dataflash
 	spi3 = stm32_spibus_initialize(3);
 
 	if (!spi3) {
@@ -307,33 +278,11 @@ __EXPORT int board_app_initialize(uintptr_t arg)
 		return -ENODEV;
 	}
 
-	/* Copied from fmu-v4
-	 * Default SPI3 to 12MHz and de-assert the known chip selects.
-	 * MS5611 has max SPI clock speed of 20MHz
-	 */
-
-	// BMP280 max SPI speed is 10 MHz
+	/* Start conservatively; the MTD driver selects its operating speed. */
 	SPI_SETFREQUENCY(spi3, 10 * 1000 * 1000);
 	SPI_SETBITS(spi3, 8);
 	SPI_SETMODE(spi3, SPIDEV_MODE3);
 	up_udelay(20);
-
-#if defined(FLASH_BASED_PARAMS)
-	static sector_descriptor_t params_sector_map[] = {
-		{1, 16 * 1024, 0x08004000},
-		{0, 0, 0},
-	};
-
-	/* Initialize the flashfs layer to use heap allocated memory */
-	result = parameter_flashfs_init(params_sector_map, NULL, 0);
-
-	if (result != OK) {
-		syslog(LOG_ERR, "[boot] FAILED to init params in FLASH %d\n", result);
-		led_on(LED_AMBER);
-		return -ENODEV;
-	}
-
-#endif
 
 	/* Configure the HW based on the manifest */
 

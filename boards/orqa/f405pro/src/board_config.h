@@ -52,73 +52,35 @@
  ****************************************************************************************************/
 /* Configuration ************************************************************************************/
 
-/* omnibusf4sd GPIOs ***********************************************************************************/
-/* LEDs */
-// power - green
-// LED1 - PB5 - blue
-#define GPIO_LED1       (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTB|GPIO_PIN5)
+/* Status LED. PA15 is active low; PB5 is SPI3 MOSI for the dataflash. */
+#define GPIO_LED1       (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTA|GPIO_PIN15)
 #define GPIO_LED_BLUE   GPIO_LED1
 
 #define BOARD_OVERLOAD_LED     LED_BLUE
-
-#define  FLASH_BASED_PARAMS
 
 /*
  * ADC channels
  *
  * These are the channel numbers of the ADCs of the microcontroller that can be used by the Px4 Firmware in the adc driver
  */
-#define ADC_CHANNELS (1 << 0) | (1 << 11) | (1 << 12)
+#define ADC_CHANNELS ((1 << 11) | (1 << 13))
 
 #define ADC_BATTERY_VOLTAGE_CHANNEL  11
 #define ADC_BATTERY_CURRENT_CHANNEL  13
-#define ADC_RC_RSSI_CHANNEL          12
-
 /* Define Battery Voltage Divider and A per V */
-#define BOARD_BATTERY1_V_DIV         (11.12f)
-#define BOARD_BATTERY1_A_PER_V       (31.f)
-
-/* User GPIOs
- *
- * GPIO0-5 are the PWM servo outputs.
- * GPIO_TIM3_CH3OUT        GPIO_TIM3_CH3OUT_1 //PB0 S1_OUT D1_ST7
- * GPIO_TIM3_CH4OUT        GPIO_TIM3_CH4OUT_1 //PB1 S2_OUT D1_ST2
- * GPIO_TIM2_CH4OUT        GPIO_TIM2_CH4OUT_1 //PA3 S3_OUT D1_ST6
- * GPIO_TIM2_CH3OUT        GPIO_TIM2_CH3OUT_1 //PA2 S4_OUT D1_ST1
- * GPIO_TIM5_CH2OUT        GPIO_TIM5_CH2OUT_1 //PA1 S5_OUT
- * GPIO_TIM1_CH1OUT        GPIO_TIM1_CH1OUT_1 //PA8 S6_OUT
- */
-
-#define _MK_GPIO_INPUT(def) (((def) & (GPIO_PORT_MASK | GPIO_PIN_MASK)) | (GPIO_INPUT|GPIO_PULLUP))
-
-#define GPIO_GPIO0_INPUT             _MK_GPIO_INPUT(GPIO_TIM3_CH3IN)
-#define GPIO_GPIO1_INPUT             _MK_GPIO_INPUT(GPIO_TIM3_CH4IN)
-#define GPIO_GPIO2_INPUT             _MK_GPIO_INPUT(GPIO_TIM2_CH3IN)
-#define GPIO_GPIO3_INPUT             _MK_GPIO_INPUT(GPIO_TIM2_CH4IN)
-//#define GPIO_GPIO4_INPUT             _MK_GPIO_INPUT(GPIO_TIM5_CH2IN)
-//#define GPIO_GPIO5_INPUT             _MK_GPIO_INPUT(GPIO_TIM1_CH1IN)
-
-#define _MK_GPIO_OUTPUT(def) (((def) & (GPIO_PORT_MASK | GPIO_PIN_MASK)) | (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR))
-
-#define GPIO_GPIO0_OUTPUT            _MK_GPIO_OUTPUT(GPIO_TIM3_CH3OUT)
-#define GPIO_GPIO1_OUTPUT            _MK_GPIO_OUTPUT(GPIO_TIM3_CH4OUT)
-#define GPIO_GPIO2_OUTPUT            _MK_GPIO_OUTPUT(GPIO_TIM2_CH3OUT)
-#define GPIO_GPIO3_OUTPUT            _MK_GPIO_OUTPUT(GPIO_TIM2_CH4OUT)
-//#define GPIO_GPIO4_OUTPUT            _MK_GPIO_OUTPUT(GPIO_TIM5_CH2OUT)
-//#define GPIO_GPIO5_OUTPUT            _MK_GPIO_OUTPUT(GPIO_TIM1_CH1OUT)
+#define BOARD_BATTERY1_V_DIV         (8.3f)
+#define BOARD_BATTERY1_A_PER_V       (92.6f)
 
 /* USB OTG FS
  *
- * PA9  OTG_FS_VBUS VBUS sensing
+ * PC5  OTG_FS_VBUS VBUS sensing
  */
 #define GPIO_OTGFS_VBUS		(GPIO_INPUT|GPIO_FLOAT|GPIO_SPEED_100MHz|GPIO_OPENDRAIN|GPIO_PORTC|GPIO_PIN5)
 
-/* PWM
- *
- * Alternatively CH3/CH4 could be assigned to UART6_TX/RX
- */
-#define DIRECT_PWM_OUTPUT_CHANNELS      4
-#define DIRECT_INPUT_TIMER_CHANNELS  4
+/* Eight PWM/DShot outputs; see timer_config.cpp for the grouped channel map. */
+#define DIRECT_PWM_OUTPUT_CHANNELS      8
+#define DIRECT_INPUT_TIMER_CHANNELS     8
+#define BOARD_NUM_IO_TIMERS             3
 
 // Has pwm outputs
 #define BOARD_HAS_PWM    DIRECT_PWM_OUTPUT_CHANNELS
@@ -145,8 +107,6 @@
 //#define SPEKTRUM_RX_AS_GPIO_OUTPUT()  px4_arch_configgpio(GPIO_PPM_IN_AS_OUT)
 //#define SPEKTRUM_RX_AS_UART()         px4_arch_configgpio(GPIO_USART1_RX)
 //#define SPEKTRUM_OUT(_one_true)       px4_arch_gpiowrite(GPIO_PPM_IN_AS_OUT, (_one_true))
-
-#define BOARD_HAS_PWM    DIRECT_PWM_OUTPUT_CHANNELS
 
 /* This board provides a DMA pool and APIs */
 #define BOARD_DMA_ALLOC_POOL_SIZE 5120

@@ -67,5 +67,5 @@ param set-default MAV_1_CONFIG 102   # TEL2
 param set-default MAV_1_MODE 0       # Normal (GCS)
 param set-default SER_TEL2_BAUD 57600
 
-# WARNING (known PX4 bug, Feb 2025): enabling UAVCAN/FDCAN1 kills all
-# Timer5 outputs (motors 3-6). Leave UAVCAN_ENABLE=0 until fixed upstream.
+# Motor outputs use TIM2 instead of TIM5, avoiding the PX4 UAVCAN/TIM5
+# resource conflict present in the original Orqa board definition.

@@ -7,7 +7,7 @@
     "summary": "ORQAF405PRO",
     "version": "0.1",
     "image_size": 0,
-    "image_maxsize": 1032192,
+    "image_maxsize": 999424,
     "git_identity": "",
     "board_revision": 0
 }

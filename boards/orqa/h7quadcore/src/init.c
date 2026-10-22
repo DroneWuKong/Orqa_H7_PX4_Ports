@@ -156,6 +156,13 @@ __EXPORT int board_app_initialize(uintptr_t arg)
 		led_on(LED_RED);
 	}
 
+#ifdef CONFIG_MMCSD
+	/* Bind SDMMC1 to the NuttX block driver before PX4 mounts the card. */
+	if (stm32_sdio_initialize() != OK) {
+		led_on(LED_RED);
+	}
+#endif
+
 #if defined(FLASH_BASED_PARAMS)
 	static sector_descriptor_t params_sector_map[] = {
 		{15, 128 * 1024, 0x081E0000},

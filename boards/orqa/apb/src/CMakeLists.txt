@@ -37,8 +37,8 @@ if("${PX4_BOARD_LABEL}" STREQUAL  "bootloader")
 	)
 	target_link_libraries(drivers_board
 		PRIVATE
-			nuttx_arch # sdio
-			nuttx_drivers # sdio
+			nuttx_arch
+			nuttx_drivers
 			bootloader
 	)
 	target_include_directories(drivers_board PRIVATE ${PX4_SOURCE_DIR}/platforms/nuttx/src/bootloader/common)
@@ -60,8 +60,8 @@ else()
 			arch_spi
 			arch_board_hw_info
 			drivers__led # drv_led_start
-			nuttx_arch # sdio
-			nuttx_drivers # sdio
+			nuttx_arch
+			nuttx_drivers
 			px4_layer
 	)
 endif()

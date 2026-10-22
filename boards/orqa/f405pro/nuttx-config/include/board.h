@@ -173,36 +173,6 @@
 #define BOARD_TIM13_FREQUENCY   STM32_APB1_TIM13_CLKIN
 #define BOARD_TIM14_FREQUENCY   STM32_APB1_TIM14_CLKIN
 
-/* SDIO dividers.  Note that slower clocking is required when DMA is disabled
- * in order to avoid RX overrun/TX underrun errors due to delayed responses
- * to service FIFOs in interrupt driven mode.  These values have not been
- * tuned!!!
- *
- * SDIOCLK=48MHz, SDIO_CK=SDIOCLK/(118+2)=400 KHz
- */
-
-#define SDIO_INIT_CLKDIV        (118 << SDIO_CLKCR_CLKDIV_SHIFT)
-
-/* DMA ON:  SDIOCLK=48MHz, SDIO_CK=SDIOCLK/(1+2)=16 MHz
- * DMA OFF: SDIOCLK=48MHz, SDIO_CK=SDIOCLK/(2+2)=12 MHz
- */
-
-#ifdef CONFIG_STM32_SDIO_DMA
-#  define SDIO_MMCXFR_CLKDIV    (1 << SDIO_CLKCR_CLKDIV_SHIFT)
-#else
-#  define SDIO_MMCXFR_CLKDIV    (2 << SDIO_CLKCR_CLKDIV_SHIFT)
-#endif
-
-/* DMA ON:  SDIOCLK=48MHz, SDIO_CK=SDIOCLK/(1+2)=16 MHz
- * DMA OFF: SDIOCLK=48MHz, SDIO_CK=SDIOCLK/(2+2)=12 MHz
- */
-
-#ifdef CONFIG_STM32_SDIO_DMA
-#  define SDIO_SDXFR_CLKDIV     (1 << SDIO_CLKCR_CLKDIV_SHIFT)
-#else
-#  define SDIO_SDXFR_CLKDIV     (2 << SDIO_CLKCR_CLKDIV_SHIFT)
-#endif
-
 /* LED definitions ******************************************************************/
 /* If CONFIG_ARCH_LEDS is not defined, then the user can control the LEDs in any
  * way.  The following definitions are used to access individual LEDs.
@@ -249,8 +219,6 @@
  *
  * PC10 (TX) and PC11 (RX) are broken out on J4
  *
- * However, this port is shared with SPI3 which contains the BMP280 and MAX7456
- *
  * The Silkscreen pin labeled SCL is TX
  *                           MISO is RX
  */
@@ -287,7 +255,7 @@
 #define GPIO_SPI1_MOSI GPIO_SPI1_MOSI_1
 
 /* SPI2:
- *  SD Card
+ *  MAX7456-compatible OSD
  *  CS: PB12 -- configured in board_config.h
  *  CLK: PB13
  *  MISO: PB14
@@ -299,7 +267,7 @@
 #define GPIO_SPI2_MOSI	GPIO_SPI2_MOSI_1
 
 /* SPI3:
- *  BMP280
+ *  W25Q128 dataflash
  *  CS: PB3 -- configured in board_config.h
  *  CLK: PC10
  *  MISO: PC11
