@@ -52,31 +52,24 @@
  ****************************************************************************************************/
 /* Configuration ************************************************************************************/
 
-/* omnibusf4sd GPIOs ***********************************************************************************/
-/* LEDs */
-// power - green
-// LED1 - PB5 - blue
-#define GPIO_LED1       (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTB|GPIO_PIN5)
+/* Status LED. PA15 is active low; PB5 is SPI3 MOSI for the dataflash. */
+#define GPIO_LED1       (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|GPIO_OUTPUT_SET|GPIO_PORTA|GPIO_PIN15)
 #define GPIO_LED_BLUE   GPIO_LED1
 
 #define BOARD_OVERLOAD_LED     LED_BLUE
-
-#define  FLASH_BASED_PARAMS
 
 /*
  * ADC channels
  *
  * These are the channel numbers of the ADCs of the microcontroller that can be used by the Px4 Firmware in the adc driver
  */
-#define ADC_CHANNELS (1 << 0) | (1 << 11) | (1 << 12)
+#define ADC_CHANNELS ((1 << 11) | (1 << 13))
 
 #define ADC_BATTERY_VOLTAGE_CHANNEL  11
 #define ADC_BATTERY_CURRENT_CHANNEL  13
-#define ADC_RC_RSSI_CHANNEL          12
-
 /* Define Battery Voltage Divider and A per V */
-#define BOARD_BATTERY1_V_DIV         (11.12f)
-#define BOARD_BATTERY1_A_PER_V       (31.f)
+#define BOARD_BATTERY1_V_DIV         (8.3f)
+#define BOARD_BATTERY1_A_PER_V       (92.6f)
 
 /* User GPIOs
  *
@@ -117,8 +110,8 @@
  *
  * Alternatively CH3/CH4 could be assigned to UART6_TX/RX
  */
-#define DIRECT_PWM_OUTPUT_CHANNELS      4
-#define DIRECT_INPUT_TIMER_CHANNELS  4
+#define DIRECT_PWM_OUTPUT_CHANNELS      8
+#define DIRECT_INPUT_TIMER_CHANNELS     8
 
 // Has pwm outputs
 #define BOARD_HAS_PWM    DIRECT_PWM_OUTPUT_CHANNELS

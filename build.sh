@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build.sh — single-command Docker build for orqa/h7quadcore
+# build.sh — single-command Docker build for any Orqa target in this repo
 #
 # Requires:
 #   - Docker running (Docker Desktop on Windows with WSL2, or Docker on Linux/macOS)
@@ -46,6 +46,10 @@ fi
 
 mkdir -p "${CCACHE_DIR}"
 
+# Keep the PX4 checkout's Orqa definitions in sync with this repository.
+mkdir -p "${PX4_SRC}/boards/orqa"
+cp -a "${SCRIPT_DIR}/boards/orqa/." "${PX4_SRC}/boards/orqa/"
+
 # Docker on Windows requires Windows-style paths (G:/...) not Git Bash paths (/g/...)
 if command -v cygpath &>/dev/null; then
   PX4_SRC_DOCKER="$(cygpath -m "${PX4_SRC}")"
@@ -56,7 +60,7 @@ else
 fi
 
 echo "========================================"
-echo "  Orqa H7 QuadCore PX4 Build"
+echo "  Orqa PX4 Port Build"
 echo "========================================"
 echo "  Target:     ${TARGET}"
 echo "  PX4 source: ${PX4_SRC_DOCKER}"

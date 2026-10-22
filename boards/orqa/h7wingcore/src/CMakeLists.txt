@@ -48,6 +48,7 @@ else()
 		i2c.cpp
 		init.c
 		led.c
+		sdio.c
 		spi.cpp
 		timer_config.cpp
 		usb.c

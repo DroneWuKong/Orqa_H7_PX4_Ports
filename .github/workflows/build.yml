@@ -1,0 +1,65 @@
+name: Build PX4 ports
+
+on:
+  push:
+    branches:
+      - master
+      - "codex/**"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.target }}
+    runs-on: ubuntu-22.04
+    container: px4io/px4-dev-nuttx-focal:2022-08-12
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - orqa_h7quadcore_default
+          - orqa_h7quadcore_bootloader
+          - orqa_h7wingcore_default
+          - orqa_h7wingcore_bootloader
+          - orqa_apb_default
+          - orqa_apb_bootloader
+          - orqa_f405pro_default
+
+    steps:
+      - name: Check out port repository
+        uses: actions/checkout@v4
+        with:
+          path: port
+
+      - name: Check out PX4 v1.15.4
+        uses: actions/checkout@v4
+        with:
+          repository: PX4/PX4-Autopilot
+          ref: v1.15.4
+          submodules: recursive
+          path: PX4-Autopilot
+
+      - name: Install Orqa board definitions
+        run: cp -a port/boards/orqa PX4-Autopilot/boards/
+
+      - name: Build
+        working-directory: PX4-Autopilot
+        run: make ${{ matrix.target }}
+
+      - name: Collect firmware
+        run: |
+          mkdir -p artifacts
+          find "PX4-Autopilot/build/${{ matrix.target }}" -maxdepth 1 -type f \
+            \( -name '*.px4' -o -name '*.bin' \) -exec cp '{}' artifacts/ \;
+          test -n "$(find artifacts -maxdepth 1 -type f -print -quit)"
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: artifacts/*
+          if-no-files-found: error
+          retention-days: 30

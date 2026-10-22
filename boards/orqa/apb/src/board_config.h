@@ -100,7 +100,7 @@
 
 #define BOARD_ADC_OPEN_CIRCUIT_V     (5.6f)
 
-/* PWM - 8 motor outputs + 2 servo outputs = 10 total */
+/* PWM - 8 motor outputs + 3 servo outputs = 11 total */
 #define DIRECT_PWM_OUTPUT_CHANNELS  11
 
 #define BOARD_NUM_IO_TIMERS 4
@@ -112,12 +112,12 @@
 
 /* USB OTG FS
  *
- * PA9  OTG_FS_VBUS VBUS sensing
+ * PE2  OTG_FS_VBUS VBUS sensing
  */
 #define GPIO_OTGFS_VBUS         /* PE2 */ (GPIO_INPUT|GPIO_PULLDOWN|GPIO_SPEED_100MHz|GPIO_PORTE|GPIO_PIN2)
 
 /* High-resolution timer */
-#define HRT_TIMER               2  /* use timer8 for the HRT (not used by motors) */
+#define HRT_TIMER               8  /* not used by motor or servo outputs */
 #define HRT_TIMER_CHANNEL       1  /* use capture/compare channel 1 */
 
 /* RC Serial port */
