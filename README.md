@@ -132,6 +132,15 @@ the flight modules, parameter metadata and diagnostic commands. Consult the
 QuadCore/Wingcore now include `sd_bench` and `sd_stress`; see
 [bench validation](docs/bench-validation.md) for the storage test procedure.
 
+Output protocols use PX4 v1.15's `PWM_MAIN_TIMn` parameters; the obsolete
+`DSHOT_CONFIG` setting has been removed. QuadCore, APB and F405 default their
+motor timer groups to DShot300. On H7, PWM9 shares TIM4 with PWM7/8 and cannot
+drive a conventional servo while that group is DShot; PWM10/11 have a separate
+50 Hz servo timer. Wingcore defaults all groups to 50 Hz PWM and leaves actuator
+functions for aircraft-specific setup in QGroundControl. Verify every output
+and its direction with propellers removed, especially after upgrading existing
+settings: board defaults do not overwrite explicitly saved parameter values.
+
 ## Build Verification
 
 Release `v0.1.0-rc1` was built in GitHub Actions with PX4's pinned
@@ -362,8 +371,8 @@ BOOT), and the factory bootloader also exposes DFU reboot (`ENABLE_DFU_BOOT`).
 | PWM6 | PA3 | TIM2 | CH4 | Motor 6 |
 | PWM7 | PB1 | TIM3 | CH4 | Motor 7 |
 | PWM8 | PB0 | TIM3 | CH3 | Motor 8 |
-| PWM9 | PD14 | TIM4 | CH3 | Servo 3 / Wingcore Aileron |
-| PWM10 | PE5 | TIM15 | CH1 | Servo 2 / Wingcore Elevator |
+| PWM9 | PD14 | TIM4 | CH3 | Servo 3; shares protocol with PWM7/8 |
+| PWM10 | PE5 | TIM15 | CH1 | Servo 2 |
 | PWM11 | PE6 | TIM15 | CH2 | Servo 1 |
 
 ### IMU Rotations (Verified)

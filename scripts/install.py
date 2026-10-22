@@ -26,6 +26,9 @@ def install(px4):
     config = json.loads((ROOT / "build-config.json").read_text())
     if git(px4, "rev-parse", "HEAD").stdout.strip() != config["px4_revision"]:
         raise ValueError("PX4 must be at {} ({})".format(config["px4_version"], config["px4_revision"]))
+    tag = git(px4, "rev-parse", config["px4_version"] + "^{commit}", check=False)
+    if tag.returncode or tag.stdout.strip() != config["px4_revision"]:
+        raise ValueError("Fetch the matching PX4 {} tag for version generation".format(config["px4_version"]))
     if Path(git(px4, "rev-parse", "--show-toplevel").stdout.strip()).resolve() != px4:
         raise ValueError("Pass the PX4 repository root")
 

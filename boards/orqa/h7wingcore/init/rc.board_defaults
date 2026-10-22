@@ -27,10 +27,11 @@ param set-default CBRK_BUZZER 0
 
 param set-default IMU_GYRO_RATEMAX 2000
 
-# Fixed-wing servo assignments on PWM9/PWM10
-# 201=Aileron, 202=Elevator
-param set-default PWM_MAIN_FUNC9 201
-param set-default PWM_MAIN_FUNC10 202
-
-# DShot for motor outputs
-param set-default DSHOT_CONFIG 300
+# All groups start at servo-compatible 50 Hz. PWM9 (PD14) shares TIM4 with
+# PWM7/8, so that group cannot mix DShot motors and a conventional servo.
+# Assign motor/control-surface functions in QGC for the actual aircraft;
+# function 201 means Servo 1, not a universal aileron assignment.
+param set-default PWM_MAIN_TIM0 50
+param set-default PWM_MAIN_TIM1 50
+param set-default PWM_MAIN_TIM2 50
+param set-default PWM_MAIN_TIM3 50

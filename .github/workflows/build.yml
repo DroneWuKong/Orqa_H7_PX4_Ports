@@ -35,6 +35,7 @@ jobs:
         run: python3 -m unittest discover -s tests -v
       - name: Install and verify pinned storage changes
         run: |
+          git -C PX4-Autopilot fetch --depth=1 origin tag v1.15.4
           python3 port/scripts/install.py PX4-Autopilot
           python3 port/scripts/check_storage.py PX4-Autopilot
 
@@ -70,7 +71,9 @@ jobs:
           path: PX4-Autopilot
 
       - name: Fetch NuttX version tags
-        run: git -C PX4-Autopilot/platforms/nuttx/NuttX/nuttx fetch --tags --force
+        run: |
+          git -C PX4-Autopilot fetch --depth=1 origin tag v1.15.4
+          git -C PX4-Autopilot/platforms/nuttx/NuttX/nuttx fetch --tags --force
 
       - name: Install Orqa board definitions and storage fixes
         run: python3 port/scripts/install.py PX4-Autopilot

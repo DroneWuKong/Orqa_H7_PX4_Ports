@@ -6,9 +6,11 @@ import base64
 import hashlib
 import json
 from pathlib import Path
+import re
 import struct
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -55,6 +57,14 @@ def revision(path):
     return subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD"], text=True).strip()
 
 
+def check_defaults(xml_path, defaults_path):
+    parameters = {p.attrib["name"] for p in ET.parse(xml_path).iter("parameter")}
+    requested = re.findall(r"^param set-default ([A-Z][A-Z0-9_]*) ", defaults_path.read_text(), re.MULTILINE)
+    missing = sorted(set(requested) - parameters)
+    if missing:
+        raise ValueError("Board defaults reference parameters absent from this firmware: " + ", ".join(missing))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("px4", type=Path)
@@ -76,6 +86,8 @@ def main():
             raise ValueError("Firmware was not built from the pinned PX4 revision")
         report = validate(bundle, raw_path.read_bytes(), board, label,
                           (build / (args.target + ".elf")).read_bytes())
+        if label == "default":
+            check_defaults(build / "parameters.xml", args.px4 / "boards/orqa" / name / "init/rc.board_defaults")
         report.update({"target": args.target, "px4_revision": config["px4_revision"],
                        "port_revision": revision(ROOT), "container": config["container"],
                        "hardware_validated": False})
@@ -91,7 +103,7 @@ def main():
         output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
         print("{}: {} bytes free; bundle, board ID and ELF layout verified".format(
             args.target, report["free_bytes"]))
-    except (ValueError, KeyError, OSError, struct.error, zlib.error, subprocess.CalledProcessError) as error:
+    except (ValueError, KeyError, OSError, struct.error, zlib.error, ET.ParseError, subprocess.CalledProcessError) as error:
         print("ERROR: {}".format(error), file=sys.stderr)
         return 1
     return 0

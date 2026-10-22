@@ -74,6 +74,18 @@ class FirmwareTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Reset vector"):
             self.validate()
 
+    def test_obsolete_startup_parameter(self):
+        with tempfile.TemporaryDirectory(prefix="orqa-parameter-test-") as directory:
+            path = Path(directory)
+            xml = path / "parameters.xml"
+            defaults = path / "rc.board_defaults"
+            xml.write_text('<parameters><group><parameter name="PWM_MAIN_TIM0"/></group></parameters>')
+            defaults.write_text("param set-default PWM_MAIN_TIM0 -4\n")
+            firmware.check_defaults(xml, defaults)
+            defaults.write_text("param set-default DSHOT_CONFIG 300\n")
+            with self.assertRaisesRegex(ValueError, "DSHOT_CONFIG"):
+                firmware.check_defaults(xml, defaults)
+
 
 class InstallerTests(unittest.TestCase):
     def setUp(self):
@@ -91,6 +103,7 @@ class InstallerTests(unittest.TestCase):
         self.git("add", "core.txt")
         self.git("-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "-qm", "fixture")
         sha = self.git("rev-parse", "HEAD").strip()
+        self.git("tag", "fixture")
         (self.port / "build-config.json").write_text(json.dumps({"px4_revision": sha, "px4_version": "fixture"}))
         (self.port / "patches/001.patch").write_text(
             "diff --git a/core.txt b/core.txt\n--- a/core.txt\n+++ b/core.txt\n@@ -1 +1 @@\n-before\n+after\n")

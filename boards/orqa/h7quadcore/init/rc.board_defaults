@@ -20,9 +20,8 @@ param set-default CBRK_SUPPLY_CHK 894281
 # Select Generic Quadrotor X by default
 param set-default SYS_AUTOSTART 4001
 
-# Ghost RC
-param set-default RC_GHST_PRT_CFG 300
-param set-default RC_GHST_TEL_EN 1
+# RCInput auto-detects supported protocols (including Ghost) on USART3.
+param set-default RC_INPUT_PROTO -1
 
 # Magnetometer on I2C1 - external probing enabled
 param set-default SYS_HAS_MAG 1
@@ -35,5 +34,10 @@ param set-default CBRK_BUZZER 0
 
 param set-default IMU_GYRO_RATEMAX 2000
 
-# DShot by default
-param set-default DSHOT_CONFIG 300
+# PX4 v1.15 selects the output protocol per timer group (-4 = DShot300).
+param set-default PWM_MAIN_TIM0 -4
+param set-default PWM_MAIN_TIM1 -4
+param set-default PWM_MAIN_TIM2 -4
+# TIM15 remains PWM for the two independent servo outputs (PWM10/11).
+# PWM9 shares TIM4 with PWM7/8 and cannot be PWM while that group is DShot.
+param set-default PWM_MAIN_TIM3 50
