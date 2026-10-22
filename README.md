@@ -14,19 +14,19 @@ copying only `boards/orqa` is no longer sufficient.
 
 ## Precompiled firmware
 
-The first hardened build is published as a **hardware-unvalidated prerelease**.
+The storage-hardened build is published as a **hardware-unvalidated prerelease**.
 Use the application `.px4` files with QGroundControl's **Custom firmware**
 option. Flash bootloader `.bin` files only through STM32 DFU and only if you
 intend to replace the installed bootloader.
 
 | Board | Application | Bootloader |
 |-------|-------------|------------|
-| H7 QuadCore | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_h7quadcore_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_h7quadcore_bootloader.bin) |
-| H7 Wingcore | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_h7wingcore_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_h7wingcore_bootloader.bin) |
-| DTK APB | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_apb_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_apb_bootloader.bin) |
-| F405 Pro | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc1/orqa_f405pro_default.px4) | Use the factory ArduPilot bootloader |
+| H7 QuadCore | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_h7quadcore_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_h7quadcore_bootloader.bin) |
+| H7 Wingcore | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_h7wingcore_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_h7wingcore_bootloader.bin) |
+| DTK APB | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_apb_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_apb_bootloader.bin) |
+| F405 Pro | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_f405pro_default.px4) | Use the factory ArduPilot bootloader |
 
-[View all release assets and checksums](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/tag/v0.1.0-rc1).
+[View all release assets and checksums](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/tag/v0.1.0-rc2).
 
 ---
 
@@ -146,19 +146,19 @@ settings: board defaults do not overwrite explicitly saved parameter values.
 
 ## Build Verification
 
-Release `v0.1.0-rc1` was built in GitHub Actions with PX4's pinned
+Release `v0.1.0-rc2` was built in GitHub Actions with PX4's digest-pinned
 `px4io/px4-dev-nuttx-focal` image and GCC 9.3.1 against a clean recursive PX4
 **v1.15.4** checkout:
 
 | Target | FLASH usage | Result |
 |--------|-------------|--------|
-| `orqa_h7quadcore_default` | 1,531,688 / 1,572,864 bytes (97.38%) | Pass |
+| `orqa_h7quadcore_default` | 1,532,256 / 1,572,864 bytes (97.42%) | Pass |
 | `orqa_h7quadcore_bootloader` | 384 KB reserved region | Pass |
-| `orqa_h7wingcore_default` | 1,548,628 / 1,572,864 bytes (98.46%) | Pass |
+| `orqa_h7wingcore_default` | 1,549,164 / 1,572,864 bytes (98.49%) | Pass |
 | `orqa_h7wingcore_bootloader` | 384 KB reserved region | Pass |
-| `orqa_apb_default` | 1,525,324 / 1,572,864 bytes (96.98%) | Pass |
+| `orqa_apb_default` | 1,522,380 / 1,572,864 bytes (96.79%) | Pass |
 | `orqa_apb_bootloader` | 384 KB reserved region | Pass |
-| `orqa_f405pro_default` | 951,729 / 999,424 bytes (95.23%) | Pass |
+| `orqa_f405pro_default` | 957,425 / 999,424 bytes (95.80%) | Pass |
 
 The 1536 KB app partition (a consequence of the 384 KB ArduPilot-compatible
 bootloader reservation) does not fit PX4's full "everything" module set, so
