@@ -432,7 +432,7 @@
  *
  *      OTG_FS_DM                           PA11
  *      OTG_FS_DP                           PA12
- *      VBUS                                PA9
+ *      VBUS                                PE2
  */
 
 

@@ -20,25 +20,27 @@ board), remapped to the Orqa F405 Pro pinout.
 | GPS | USART3 (PB10/PB11) = ttyS1 |
 | ESC telemetry | UART5 (PD2 RX) = ttyS2 |
 | MAVLink / SiK | USART6 (PC6/PC7) = ttyS3 |
-| Motors 1-4 | PA3 T2C4, PB0 T3C3, PB1 T3C4, PA2 T2C3 (match the mamba template exactly) |
-| Motors 5-8 (board also breaks these out) | PA0 T2C1, PA1 T2C2, PC8 T8C3, PC9 T8C4 — NOT yet in timer_config (4-motor quad config first) |
+| Motors 1-4 | PA3 T2C4, PB0 T3C3, PB1 T3C4, PA2 T2C3 |
+| Motors 5-8 | PA0 T2C1, PA1 T2C2, PC8 T8C3, PC9 T8C4 |
 | Battery | volt PC1 (ADC1_IN11), curr PC3 (ADC1_IN13) |
 | LEDs | PA15, PB4 |
 | Board ID | 1155 (AP_HW_ORQAF405PRO) |
 | USB | 0x35b6:0x0092 (PID provisional — Orqa F405 USB PID not yet confirmed) |
 
 ## Status
-- Builds clean against PX4 v1.15.4 (`make orqa_f405pro_default`), 94.68% of the
-  992 KB app region — F405 is flash-constrained, so the module set is the
-  minimal MC/FPV set inherited from the mamba template (no FW/VTOL, no OSD
-  driver yet).
+- The app starts at `0x0800C000`, matching the factory bootloader's 48 KB
+  reservation, and uses a 976 KB application region.
+- The board has no microSD socket. SPI2 drives the MAX7456 OSD; SPI3 drives
+  the W25Q128 dataflash, which stores parameters and waypoints through PX4's
+  MTD manifest.
+- All eight motor outputs and the MAX7456 OSD driver are enabled.
 - **Not** hardware-validated. IMU rotations (MPU6000 R2 / ICM42688P R12) are
   from the ArduPilot hwdef and must be checked on a board. USB PID unconfirmed.
-- Bootloader: uses the classic F405 layout from the template. A dedicated
+- Bootloader: a dedicated
   `orqa_f405pro_bootloader` target is not built yet; flash via the factory
   ArduPilot bootloader (board id 1155) or an existing F405 bootloader.
 
 ## Follow-ups
-- Expand to 8 motor outputs (add TIM2_CH1/2 + TIM8_CH3/4).
-- Add MAX7456 OSD driver if flash budget allows.
-- Confirm USB PID and IMU rotations on hardware.
+- Confirm the factory USB PID and IMU rotations on hardware.
+- Verify external-flash parameter persistence, OSD output, and all eight motor
+  channels on a physical board.
