@@ -42,7 +42,7 @@ jobs:
   build:
     name: ${{ matrix.target }}
     runs-on: ubuntu-22.04
-    container: px4io/px4-dev-nuttx-focal:2022-08-12
+    container: px4io/px4-dev-nuttx-focal:2022-08-12@sha256:30881ed09e03f0512ac84351c75a4b564431cad868aca8634b033042c153e6c4
     needs: checks
     strategy:
       fail-fast: false

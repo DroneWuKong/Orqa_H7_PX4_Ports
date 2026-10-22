@@ -17,6 +17,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def validate(bundle, raw, board, label, elf):
+    if bundle.get("magic") != "PX4FWv1":
+        raise ValueError("Unknown firmware package format")
     if bundle["board_id"] != board["board_id"]:
         raise ValueError("Firmware board ID does not match the target")
     image = zlib.decompress(base64.b64decode(bundle["image"], validate=True))
@@ -30,7 +32,9 @@ def validate(bundle, raw, board, label, elf):
     if len(raw) < 8 or len(raw) > limit - minimum:
         raise ValueError("Firmware exceeds partition or minimum free-space budget")
     stack, reset = struct.unpack_from("<II", raw)
-    if stack & 3 or not 0x20000000 <= stack <= 0x40000000:
+    # NuttX emits _ebss + the configured idle-stack size (750 bytes on
+    # these ports); the Cortex-M masks the low two MSP bits on reset.
+    if not 0x20000000 <= (stack & ~3) <= 0x40000000:
         raise ValueError("Invalid initial stack pointer")
     if not reset & 1 or not origin <= reset - 1 < origin + len(raw):
         raise ValueError("Reset vector does not point inside the firmware partition")
@@ -88,6 +92,8 @@ def main():
                           (build / (args.target + ".elf")).read_bytes())
         if label == "default":
             check_defaults(build / "parameters.xml", args.px4 / "boards/orqa" / name / "init/rc.board_defaults")
+        for patch in sorted((ROOT / "patches").glob("*.patch")):
+            subprocess.run(["git", "-C", str(args.px4), "apply", "--reverse", "--check", str(patch)], check=True)
         report.update({"target": args.target, "px4_revision": config["px4_revision"],
                        "port_revision": revision(ROOT), "container": config["container"],
                        "hardware_validated": False})

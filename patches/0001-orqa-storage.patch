@@ -1,5 +1,5 @@
 diff --git a/ROMFS/px4fmu_common/init.d/rcS b/ROMFS/px4fmu_common/init.d/rcS
-index c0b895a..2bbba25 100644
+index c0b895a..3023141 100644
 --- a/ROMFS/px4fmu_common/init.d/rcS
 +++ b/ROMFS/px4fmu_common/init.d/rcS
 @@ -60,7 +60,9 @@ then
@@ -13,20 +13,25 @@ index c0b895a..2bbba25 100644
  	then
  		echo "INFO [init] formatting /dev/mmcsd0"
  		set STARTUP_TUNE 15 # tune 15 = SD_ERROR (overridden to SD_INIT if format + mount succeeds)
-@@ -81,6 +83,12 @@ then
+@@ -81,6 +83,17 @@ then
  		fi
  	fi
  
 +	if [ $SDCARD_AVAILABLE = no ]
 +	then
-+		echo "ERROR [init] SD card mount failed; card left unchanged"
++		if [ $SDCARD_FORMAT = no ]
++		then
++			echo "ERROR [init] SD card mount failed; card left unchanged"
++		else
++			echo "ERROR [init] SD card unavailable after requested format"
++		fi
 +		set STARTUP_TUNE 15
 +	fi
 +
  	if [ $SDCARD_AVAILABLE = yes ]
  	then
  		if hardfault_log check
-@@ -242,8 +250,12 @@ else
+@@ -242,8 +255,12 @@ else
  	else
  		if param compare SYS_DM_BACKEND 0
  		then

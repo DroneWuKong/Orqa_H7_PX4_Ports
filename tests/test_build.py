@@ -28,7 +28,7 @@ class FirmwareTests(unittest.TestCase):
         self.board = {"board_id": 1204, "app_origin": 0x08060000,
                       "app_size": 1572864, "min_free": 16384}
         self.raw = struct.pack("<II", 0x24001000, 0x08060009) + bytes(56)
-        self.bundle = {"board_id": 1204, "image_maxsize": 1572864, "image_size": len(self.raw),
+        self.bundle = {"magic": "PX4FWv1", "board_id": 1204, "image_maxsize": 1572864, "image_size": len(self.raw),
                        "image": base64.b64encode(zlib.compress(self.raw)).decode()}
         self.elf = bytearray(84)
         self.elf[:7] = b"\x7fELF\x01\x01\x01"
@@ -43,9 +43,19 @@ class FirmwareTests(unittest.TestCase):
     def test_valid(self):
         self.assertEqual(self.validate()["free_bytes"], 1572800)
 
+    def test_nuttx_initial_stack_low_bits(self):
+        self.raw = struct.pack("<II", 0x24001002, 0x08060009) + bytes(56)
+        self.bundle["image"] = base64.b64encode(zlib.compress(self.raw)).decode()
+        self.validate()
+
     def test_wrong_board(self):
         self.bundle["board_id"] = 1013
         with self.assertRaisesRegex(ValueError, "board ID"):
+            self.validate()
+
+    def test_wrong_package_format(self):
+        self.bundle["magic"] = "wrong"
+        with self.assertRaisesRegex(ValueError, "package format"):
             self.validate()
 
     def test_wrong_partition(self):

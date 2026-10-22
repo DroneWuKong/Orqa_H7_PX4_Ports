@@ -2,7 +2,9 @@
 """Exercise patched storage failure paths and boot policy without a flight board."""
 
 import argparse
+import json
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 
@@ -72,6 +74,7 @@ def check_driver(px4):
 
 
 def check_boards(px4):
+    layouts = json.loads((ROOT / "build-config.json").read_text())["boards"]
     for name in ("h7quadcore", "h7wingcore", "apb", "f405pro"):
         board = px4 / "boards/orqa" / name
         config = (board / "nuttx-config/nsh/defconfig").read_text().splitlines()
@@ -90,7 +93,48 @@ def check_boards(px4):
         defaults = (board / "init/rc.board_defaults").read_text()
         if "param load $PARAM_FILE" in defaults or "\n\treboot\n" in defaults:
             raise RuntimeError("Automatic legacy SD parameter migration restored")
+        header = (board / "src/board_config.h").read_text()
+        if not re.search(r'#define RC_SERIAL_PORT\s+"/dev/ttyS0"', header):
+            raise RuntimeError("{} has no RCInput startup port".format(name))
+        prototype = json.loads((board / "firmware.prototype").read_text())
+        layout = layouts[name]
+        if prototype["board_id"] != layout["board_id"] or prototype["image_maxsize"] != layout["app_size"]:
+            raise RuntimeError("Firmware prototype disagrees with flash layout: " + name)
+        if name != "f405pro":
+            # Check the bootloader's erase/CRC bounds, not just its own ELF.
+            with tempfile.TemporaryDirectory(prefix="orqa-layout-test-") as directory:
+                source = Path(directory) / "layout.cpp"
+                source.write_text('''
+#include "hw_config.h"
+static_assert(APP_LOAD_ADDRESS == %du, "application address");
+static_assert(BOARD_TYPE == %du, "board ID");
+static_assert(BOARD_FLASH_SIZE - 128 * 1024 - APP_RESERVATION_SIZE == %du, "bootloader CRC bounds");
+static_assert(BOARD_FLASH_SECTORS * 128 * 1024 == %du, "erase size");
+static_assert(0x08000000 + BOARD_FIRST_FLASH_SECTOR_TO_ERASE * 128 * 1024 == APP_LOAD_ADDRESS, "erase start");
+''' % (layout["app_origin"], layout["board_id"], layout["app_size"], layout["app_size"]))
+                subprocess.run(["g++", "-std=c++14", "-fsyntax-only", "-I", str(board / "src"), str(source)], check=True)
     print("PASS: board storage configuration and parameter preservation")
+    print("PASS: RC startup ports, board IDs and H7 bootloader erase/CRC bounds")
+
+
+def check_manifest(px4):
+    # Compile the installed common manifest against PX4's real manifest types.
+    # Stub only hardware includes; no device is accessed by this host test.
+    with tempfile.TemporaryDirectory(prefix="orqa-manifest-test-") as directory:
+        path = Path(directory)
+        (path / "nuttx/spi").mkdir(parents=True)
+        (path / "nuttx/config.h").write_text("#pragma once\n")
+        (path / "board_config.h").write_text(
+            '#pragma once\n#include <sys/cdefs.h>\n#define __EXPORT\n')
+        (path / "nuttx/spi/spi.h").write_text("#pragma once\n#define SPIDEV_FLASH(n) (n)\n")
+        for flag in ([], ["-DFLASH_BASED_PARAMS"]):
+            binary = path / "manifest_probe"
+            subprocess.run(["g++", "-std=c++14", "-Wall", "-Wextra", "-Werror", *flag,
+                            "-I", str(path), "-I", str(px4 / "platforms/common/include"),
+                            str(px4 / "boards/orqa/common/mtd.cpp"),
+                            str(ROOT / "tests/manifest_probe.cpp"), "-o", str(binary)], check=True)
+            subprocess.run([str(binary)], check=True)
+    print("PASS: real H7/F405 manifests use SPI NOR and correctly sized, erase-aligned partitions")
 
 
 def main():
@@ -100,6 +144,7 @@ def main():
     check_boot(args.px4)
     check_driver(args.px4)
     check_boards(args.px4)
+    check_manifest(args.px4)
 
 
 if __name__ == "__main__":

@@ -38,8 +38,8 @@ The QuadCore and Wingcore are **the same PCB**. PX4 handles quad vs fixed-wing a
 |-----------|---------|
 | MCU | STM32H743VIH6 (LQFP-100) |
 | HSE Crystal | 8 MHz → 480 MHz SYSCLK |
-| IMU 1 | ICM-42688-P on SPI1 — CS=PA4, DRDY=PC3, rotation CW270 |
-| IMU 2 | ICM-42688-P on SPI4 — CS=PE11, DRDY=PE10, rotation CW180 |
+| IMU 1 | MPU6000/ICM-42688-P on SPI1 — CS=PA4, DRDY=PC3, rotation R12 |
+| IMU 2 | ICM-42688-P on SPI4 — CS=PE11, DRDY=PE10, rotation R14 |
 | Barometer | DPS310 on I2C2 @ 0x77 |
 | Magnetometer | QMC5883 on I2C1 (external) |
 | OSD | MAX7456 on SPI3 — CS=PA15 |
@@ -126,8 +126,11 @@ files are no longer imported automatically or used to trigger a reboot. If
 needed, import a reviewed backup explicitly with `param import <path>` followed
 by `param save`.
 
-H7 builds omit embedded command help text to recover flash space while keeping
-the flight modules, parameter metadata and diagnostic commands. Consult the
+H7 builds omit embedded command help text and four optional external I2C RGB
+controller drivers to recover flash space. Onboard GPIO status LEDs, flight
+modules, parameter metadata and diagnostic commands remain available. Enable
+`CONFIG_COMMON_LIGHT` in a custom build if an external RGB controller is needed,
+then recheck its flash budget. Consult the
 [PX4 module reference](https://docs.px4.io/v1.15/en/modules/) for command usage.
 QuadCore/Wingcore now include `sd_bench` and `sd_stress`; see
 [bench validation](docs/bench-validation.md) for the storage test procedure.
@@ -354,30 +357,35 @@ BOOT), and the factory bootloader also exposes DFU reboot (`ENABLE_DFU_BOOT`).
 
 | UART | TX | RX | Default Function |
 |------|----|----|-----------------|
-| USART3 | PD8 | PD9 | RC Input (GHST) |
+| USART3 | PD8 | PD9 | RC Input (protocol autodetection, including GHST) |
 | USART6 | PC6 | PC7 | MAVLink Telemetry |
 | UART7 | PE8 | PE7 | GPS |
 | UART8 | — | PE0 | ESC Telemetry (RX only) |
 
 ### Motor / Servo Outputs
 
-| Output | Pin | Timer | Channel | Function |
+The PX4 output numbers below follow `timer_config.cpp` and the QGroundControl
+actuator screen. They differ from the PCB's motor labels; assign functions and
+test the actual motor order during setup. `RC_SERIAL_PORT` now explicitly binds
+the H7 RC input driver to USART3 (`/dev/ttyS0`), with protocol autodetection.
+
+| PX4 output | Pin | Timer | Channel | PCB label |
 |--------|-----|-------|---------|----------|
-| PWM1 | PD12 | TIM4 | CH1 | Motor 1 |
-| PWM2 | PD13 | TIM4 | CH2 | Motor 2 |
+| PWM1 | PB0 | TIM3 | CH3 | Motor 8 |
+| PWM2 | PB1 | TIM3 | CH4 | Motor 7 |
 | PWM3 | PA1 | TIM2 | CH2 | Motor 3 |
 | PWM4 | PA0 | TIM2 | CH1 | Motor 4 |
 | PWM5 | PA2 | TIM2 | CH3 | Motor 5 |
 | PWM6 | PA3 | TIM2 | CH4 | Motor 6 |
-| PWM7 | PB1 | TIM3 | CH4 | Motor 7 |
-| PWM8 | PB0 | TIM3 | CH3 | Motor 8 |
+| PWM7 | PD13 | TIM4 | CH2 | Motor 1 |
+| PWM8 | PD12 | TIM4 | CH1 | Motor 2 |
 | PWM9 | PD14 | TIM4 | CH3 | Servo 3; shares protocol with PWM7/8 |
 | PWM10 | PE5 | TIM15 | CH1 | Servo 2 |
 | PWM11 | PE6 | TIM15 | CH2 | Servo 1 |
 
-### IMU Rotations (Verified)
+### IMU Rotations (Source-derived)
 
-Rotations verified from PCB layout analysis, physical measurement, and cross-referenced against [ORQA's official PX4 fork](https://github.com/orqafpv/PX4-Autopilot/tree/develop_h743-3030-pro). See [`boards/orqa/h7quadcore/docs/`](boards/orqa/h7quadcore/docs/) for PCB layout images.
+Rotations are based on PCB layout analysis and cross-referenced against [ORQA's official PX4 fork](https://github.com/orqafpv/PX4-Autopilot/tree/develop_h743-3030-pro). See [`boards/orqa/h7quadcore/docs/`](boards/orqa/h7quadcore/docs/) for PCB layout images. Confirm axes on each physical board revision before flight.
 
 | IMU | Bus | Mount | Physical | PX4 Rotation |
 |-----|-----|-------|----------|--------------|

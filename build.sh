@@ -58,6 +58,7 @@ mkdir -p "${CCACHE_DIR}"
 # Install the version-checked overlay and required upstream storage fixes.
 # The installer refuses to overwrite local edits in an existing overlay.
 python3 "${SCRIPT_DIR}/scripts/install.py" "${PX4_SRC}"
+CONTAINER_IMAGE="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["container"])' "${SCRIPT_DIR}/build-config.json")"
 
 # Docker on Windows requires Windows-style paths (G:/...) not Git Bash paths (/g/...)
 if command -v cygpath &>/dev/null; then
@@ -73,7 +74,7 @@ echo "  Orqa PX4 Port Build"
 echo "========================================"
 echo "  Target:     ${TARGET}"
 echo "  PX4 source: ${PX4_SRC_DOCKER}"
-echo "  Docker:     px4io/px4-dev-nuttx-focal:2022-08-12"
+echo "  Docker:     ${CONTAINER_IMAGE}"
 echo "========================================"
 
 MSYS_NO_PATHCONV=1 docker run --rm \
@@ -82,7 +83,7 @@ MSYS_NO_PATHCONV=1 docker run --rm \
   --mount "type=bind,source=${PX4_SRC_DOCKER},target=/px4" \
   --mount "type=bind,source=${CCACHE_DIR_DOCKER},target=/ccache" \
   --workdir="/px4" \
-  px4io/px4-dev-nuttx-focal:2022-08-12 \
+  "${CONTAINER_IMAGE}" \
   /bin/bash -c 'exec make "$1"' -- "${TARGET}"
 
 python3 "${SCRIPT_DIR}/scripts/check_firmware.py" "${PX4_SRC}" "${TARGET}"
