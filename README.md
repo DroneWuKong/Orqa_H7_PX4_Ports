@@ -95,14 +95,15 @@ See [Build Verification](#build-verification) for the exact target list.
 
 ## Build Verification
 
-Built in GitHub Actions with PX4's pinned `px4io/px4-dev-nuttx-focal` image
-and GCC 9.3.1 against a clean recursive PX4 **v1.15.4** checkout:
+Release `v0.1.0-rc1` was built in GitHub Actions with PX4's pinned
+`px4io/px4-dev-nuttx-focal` image and GCC 9.3.1 against a clean recursive PX4
+**v1.15.4** checkout:
 
 | Target | FLASH usage | Result |
 |--------|-------------|--------|
-| `orqa_h7quadcore_default` | 1,531,696 / 1,572,864 bytes (97.38%) | Pass |
+| `orqa_h7quadcore_default` | 1,531,688 / 1,572,864 bytes (97.38%) | Pass |
 | `orqa_h7quadcore_bootloader` | 384 KB reserved region | Pass |
-| `orqa_h7wingcore_default` | 1,548,620 / 1,572,864 bytes (98.46%) | Pass |
+| `orqa_h7wingcore_default` | 1,548,628 / 1,572,864 bytes (98.46%) | Pass |
 | `orqa_h7wingcore_bootloader` | 384 KB reserved region | Pass |
 | `orqa_apb_default` | 1,525,324 / 1,572,864 bytes (96.98%) | Pass |
 | `orqa_apb_bootloader` | 384 KB reserved region | Pass |
