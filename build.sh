@@ -87,6 +87,9 @@ MSYS_NO_PATHCONV=1 docker run --rm \
   /bin/bash -c 'exec make "$1"' -- "${TARGET}"
 
 python3 "${SCRIPT_DIR}/scripts/check_firmware.py" "${PX4_SRC}" "${TARGET}"
+if [ "$TARGET" = orqa_apb_default ]; then
+  python3 "${SCRIPT_DIR}/scripts/check_apb_logging.py" "${PX4_SRC}/build/${TARGET}"
+fi
 
 echo "========================================"
 echo "  Build complete: ${TARGET}"

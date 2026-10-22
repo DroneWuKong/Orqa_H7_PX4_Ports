@@ -88,14 +88,23 @@ See [Build Verification](#build-verification) for the exact target list.
 
 ### Storage status and known gaps
 
+The APB companion logging integration below is **newer than v0.1.0-rc2**.
+Use an APB firmware build from this tree with its companion package; the
+existing rc2 download does not include the bounded logging profile. Future
+tagged releases include `orqa-apb-companion.tar.gz` beside the firmware.
+
 - **QuadCore/Wingcore:** SDMMC1, the NuttX MMC/SD layer, and board startup are
   wired together in firmware. Card detect is not exposed, so firmware assumes
   a card is inserted. Mounting and sustained logging still need hardware tests.
   Failed mounts no longer automatically format the card. Insert the card before
   powering on; removal/reinsertion while running is not supported.
-- **DTK APB:** SD remains deliberately disabled. The only published provisional
-  SDMMC2 map overlaps active flash, OSD, and ADC pins; enabling it without a
-  confirmed APB schematic would corrupt other peripherals.
+- **DTK APB:** the microSD belongs to the **i.MX8M Plus/Linux companion**, where
+  Orqa mounts it at `/sdcard`. STM32 SDMMC stays disabled; the provisional
+  vendor SDMMC2 definitions are not the route to that card. PX4 logs need a
+  companion-side MAVLink ULog receiver writing to the mounted card. This
+  path now has a bounded FC profile and an isolated, mount-checked recorder
+  package. Install both sides using the [APB logging guide](companion/apb/README.md).
+  Host protocol/recovery tests pass; physical UART/SD validation remains required.
 - **F405 Pro:** the board has no microSD socket. SPI2 is the OSD bus, not an SD
   bus. Parameters and waypoints use the onboard SPI3 W25Q128 dataflash.
 
@@ -110,7 +119,7 @@ shared, erase-aligned W25 partition definition and a conservative 10 MHz clock:
 | Board | Parameters | Missions, fences and rally points | Flight logs |
 |-------|------------|----------------------------------|-------------|
 | QuadCore / Wingcore | Existing internal flash sector | 256 KiB W25 partition on SPI2 | microSD |
-| APB | Existing internal flash sector | 256 KiB W25 partition on SPI2 | MAVLink streaming; SD disabled |
+| APB | Existing internal flash sector | 256 KiB W25 partition on SPI2 | MAVLink → isolated i.MX recorder → `/sdcard/px4`; companion installation required |
 | F405 Pro | 64 KiB W25 partition on SPI3 | Separate 256 KiB W25 partition on SPI3 | MAVLink streaming; no SD socket |
 
 `SYS_DM_BACKEND=0` selects the W25 mission partition when initialized, falling
@@ -303,7 +312,7 @@ Differences from the quadcore/wingcore targets:
 | Board ID | 1204 (registered, matches mainline AP bootloader) | 1189 (confirmed from the MRM2-10 AI factory image) |
 | USB PID | `0x35b6:0x0091` | `0x35b6:0x0090` (matches ORQA's official PX4 APB target) |
 | IMU probing | SPI1: MPU6000 → ICM42688P (R12); SPI4: ICM42688P (R14) | SPI1: MPU6000 → ICM42688P (R12); SPI4: ICM42605 (R12) → ICM42688P (R14) |
-| SD card | SDMMC1 (PC8-PC12/PD2), firmware enabled | Disabled: provisional SDMMC2 pins conflict with active peripherals |
+| SD card | SDMMC1 (PC8-PC12/PD2), firmware enabled | i.MX/Linux-owned `/sdcard`; not STM32 SDMMC |
 | Companion link | — | **UART4 (PC10/PC11) = TEL1 @ 230400** to the i.MX8M Plus; `MAV_0` defaults to ONBOARD |
 | Serial map (ttyS0…) | USART3 RC, USART6 TEL1, UART7 GPS, UART8 ESC | USART3 RC, UART4 TEL1 (IMX), USART6 TEL2 (SiK/gimbal), UART7 GPS, UART8 ESC (TEL3) |
 
@@ -412,7 +421,7 @@ Rotations are based on PCB layout analysis and cross-referenced against [ORQA's 
 | Current ADC | PC1 (ADC1_CH11) |
 | CAN RX | PB8 |
 | CAN TX | PB9 |
-| microSD | Quad/Wing SDMMC1 PC8-PC12/PD2; APB disabled pending a non-conflicting verified map |
+| microSD | Quad/Wing SDMMC1 PC8-PC12/PD2; APB card is i.MX/Linux-owned at `/sdcard` |
 
 ---
 

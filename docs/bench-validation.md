@@ -66,8 +66,22 @@ erase that card when requested; do not create it during preservation tests.
 
 ## Remaining hardware checks
 
+For APB, install the companion half using the
+[logging integration guide](../companion/apb/README.md); firmware alone cannot
+write to the i.MX-owned card. Its host tests include actual router processes,
+supervisor removal/recovery, low-space stopping and independent ULog parsing.
+
 After storage passes, verify both IMUs and their orientations, ADC scaling,
 UART routing, OSD, PWM/DShot outputs and CAN concurrently with logging. APB's
-companion UART remains at 230400 baud. APB SD stays disabled until a verified
-schematic resolves the published pin conflicts. None of these checks is
+companion UART remains at 230400 baud. APB's microSD is owned by the i.MX/Linux
+companion at `/sdcard`, not by STM32 SDMMC. Validate Linux card mounting and
+the MAVLink ULog receiver separately: a forwarded telemetry stream alone is
+not a saved PX4 flight log. Confirm `/sdcard` is actually mounted before
+recording, so a missing card cannot silently redirect logs into the root
+filesystem. Check missing/full-card behavior, removal/reinsertion, and recovery
+after failed mounting; the supplied BSP helper has known source-level issues
+documented in [the APB reference](../reference/orqa-apb/README.md#sd-card-ownership-correction-2026-10-22).
+At 230400 baud with 8N1 framing the raw ceiling is 23040 bytes/s per direction,
+before MAVLink overhead and other traffic; measure log dropouts and control-link
+latency under load rather than assuming full-rate ULog fits. None of these checks is
 established by the host regression tests or seven-target build matrix.

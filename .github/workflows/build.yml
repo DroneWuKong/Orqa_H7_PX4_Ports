@@ -39,11 +39,36 @@ jobs:
           python3 port/scripts/install.py PX4-Autopilot
           python3 port/scripts/check_storage.py PX4-Autopilot
 
+  logging:
+    name: APB native ULog integration
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build pinned companion recorder
+        run: |
+          python3 -m pip install meson==1.12.1 pymavlink==2.4.49 pyulog==1.3.0
+          git clone https://github.com/mavlink-router/mavlink-router.git /tmp/mavlink-router
+          git -C /tmp/mavlink-router checkout 42529d55b665e0a9a29e424e186f514c56c2e5b5
+          git -C /tmp/mavlink-router submodule update --init --recursive
+          meson setup /tmp/mavlink-router/build /tmp/mavlink-router -Dsystemdsystemunitdir=/lib/systemd/system
+          ninja -C /tmp/mavlink-router/build src/mavlink-routerd
+      - name: Test capture, packet recovery and SD supervisor
+        env:
+          MAVLINK_ROUTER_BIN: /tmp/mavlink-router/build/src/mavlink-routerd
+        run: python3 tests/probe_apb_router.py
+      - name: Package companion installation files
+        run: tar --exclude=__pycache__ -czf orqa-apb-companion.tar.gz -C companion apb
+      - uses: actions/upload-artifact@v7
+        with:
+          name: orqa_apb_companion
+          path: orqa-apb-companion.tar.gz
+          if-no-files-found: error
+
   build:
     name: ${{ matrix.target }}
     runs-on: ubuntu-22.04
     container: px4io/px4-dev-nuttx-focal:2022-08-12@sha256:30881ed09e03f0512ac84351c75a4b564431cad868aca8634b033042c153e6c4
-    needs: checks
+    needs: [checks, logging]
     strategy:
       fail-fast: false
       matrix:
@@ -85,6 +110,9 @@ jobs:
       - name: Collect firmware
         run: |
           python3 port/scripts/check_firmware.py PX4-Autopilot ${{ matrix.target }}
+          if [ '${{ matrix.target }}' = orqa_apb_default ]; then
+            python3 port/scripts/check_apb_logging.py PX4-Autopilot/build/orqa_apb_default
+          fi
           mkdir -p artifacts
           find "PX4-Autopilot/build/${{ matrix.target }}" -maxdepth 1 -type f \
             \( -name '*.px4' -o -name '*.bin' -o -name '*.manifest.json' \) -exec cp '{}' artifacts/ \;
@@ -133,6 +161,7 @@ jobs:
           test "$(find . -maxdepth 1 -name '*.px4' | wc -l)" -eq 7
           test "$(find . -maxdepth 1 -name '*.bin' | wc -l)" -eq 7
           test "$(find . -maxdepth 1 -name '*.manifest.json' | wc -l)" -eq 7
+          test -s orqa-apb-companion.tar.gz
           sha256sum * > SHA256SUMS
 
       - name: Publish GitHub release

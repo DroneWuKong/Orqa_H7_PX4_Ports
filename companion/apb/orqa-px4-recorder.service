@@ -1,0 +1,24 @@
+[Unit]
+Description=Orqa APB isolated PX4 ULog recorder
+After=mavlink-router.service
+# Intentionally no Requires/BindsTo on core telemetry or vendor SD service.
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/lib/orqa-px4/recorder.py
+Restart=on-failure
+RestartSec=5
+RuntimeDirectory=orqa-px4-recorder
+RuntimeDirectoryMode=0700
+Environment=PYTHONUNBUFFERED=1
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+NoNewPrivileges=true
+ProtectHome=true
+ProtectSystem=full
+TimeoutStopSec=15
+KillMode=control-group
+
+[Install]
+WantedBy=multi-user.target

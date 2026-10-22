@@ -1,0 +1,19 @@
+diff --git a/src/modules/logger/logged_topics.cpp b/src/modules/logger/logged_topics.cpp
+--- a/src/modules/logger/logged_topics.cpp
++++ b/src/modules/logger/logged_topics.cpp
+@@ -557,6 +557,15 @@
+ 
+ bool LoggedTopics::initialize_logged_topics(SDLogProfileMask profile)
+ {
++#if defined(CONFIG_ARCH_BOARD_ORQA_APB)
++	// Companion SD is not accessible as a local filesystem. Keep the UART
++	// profile bounded even if saved SDLOG_PROFILE enables high-rate logging.
++	// A rate-factor override must not increase this board's traffic.
++	_rate_factor = 1.0f;
++#include "../../../boards/orqa/apb/src/logging_topics.inc"
++	PX4_INFO("APB bounded UART log profile (instance 0)");
++	return _subscriptions.count > 0;
++#endif
+ 	int ntopics = add_topics_from_file(PX4_STORAGEDIR "/etc/logging/logger_topics.txt");
+ 
+ 	if (ntopics > 0) {

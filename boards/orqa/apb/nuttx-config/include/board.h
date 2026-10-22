@@ -418,28 +418,13 @@
 #define GPIO_I2C2_SCL_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN |GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTB | GPIO_PIN10)
 #define GPIO_I2C2_SDA_GPIO                  (GPIO_OUTPUT | GPIO_OPENDRAIN |GPIO_SPEED_50MHz | GPIO_OUTPUT_SET | GPIO_PORTB | GPIO_PIN11)
 
-/* SDMMC2 (per ORQA's official APB target — SDMMC1 is impossible here
- * because UART4 (IMX bridge) owns PC10/PC11 = SDMMC1_D2/D3).
- *
- * WARNING (carried over from orqafpv develop_APB-initial, unvalidated on
- * hardware): these SDMMC2 pin picks overlap other configured peripherals —
- * D0/D1 (PB14/PB15) = SPI2 dataflash pins, D2/D3 (PB3/PB4) = SPI3 OSD
- * pins, CK (PC1) = battery-current ADC. On real APB hardware determine
- * which peripherals the FC actually exposes and disable the dead ones.
+/* APB microSD belongs to i.MX/Linux (/sdcard). The initial vendor SDMMC2
+ * guesses conflicted with SPI flash, OSD and the current ADC. They are not
+ * a route to the companion card; use MAVLink ULog streaming instead.
  */
-#define GPIO_SDMMC2_D0_0          (GPIO_ALT|GPIO_AF9|GPIO_PUSHPULL|GPIO_PORTB|GPIO_PIN14)
-#define GPIO_SDMMC2_D1_0          (GPIO_ALT|GPIO_AF9|GPIO_PUSHPULL|GPIO_PORTB|GPIO_PIN15)
-#define GPIO_SDMMC2_D2_2          (GPIO_ALT|GPIO_AF9|GPIO_PUSHPULL|GPIO_PORTB|GPIO_PIN3)
-#define GPIO_SDMMC2_D3_0          (GPIO_ALT|GPIO_AF9|GPIO_PUSHPULL|GPIO_PORTB|GPIO_PIN4)
-#define GPIO_SDMMC2_CK_2          (GPIO_ALT|GPIO_AF9|GPIO_PORTC|GPIO_PIN1)
-#define GPIO_SDMMC2_CMD_1         (GPIO_ALT|GPIO_AF11|GPIO_PUSHPULL|GPIO_PULLUP|GPIO_PORTD|GPIO_PIN7)
-
-#define GPIO_SDMMC2_D0   GPIO_SDMMC2_D0_0
-#define GPIO_SDMMC2_D1   GPIO_SDMMC2_D1_0
-#define GPIO_SDMMC2_D2   GPIO_SDMMC2_D2_2
-#define GPIO_SDMMC2_D3   GPIO_SDMMC2_D3_0
-#define GPIO_SDMMC2_CK   GPIO_SDMMC2_CK_2
-#define GPIO_SDMMC2_CMD  GPIO_SDMMC2_CMD_1
+#if defined(CONFIG_STM32H7_SDMMC1) || defined(CONFIG_STM32H7_SDMMC2) || defined(CONFIG_MMCSD)
+#  error "APB microSD is companion-owned; do not enable STM32 SDMMC"
+#endif
 
 /* USB
  *

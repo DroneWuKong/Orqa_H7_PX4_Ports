@@ -47,7 +47,7 @@ param set-default PWM_MAIN_TIM3 50
 # in ORQA's official APB board.h) = TEL1 (/dev/ttyS1). On the SOC side this
 # is UART3 (/dev/ttymxc2); mavlink-router bridges it to udp://127.0.0.1:14540
 # for the AI Wingman service, which needs PX4's primary MAVLink instance in
-# ONBOARD mode at max rate.
+# ONBOARD mode. Telemetry and ULog share a bounded UART budget.
 #
 # Baud 230400 is FIELD-CONFIRMED from Ai-Project apb/deploy/mavlink-router.conf
 # and apb/configs/orqa_mrm2_10f_arducopter.param (SERIAL4_BAUD=230, "matches
@@ -55,8 +55,13 @@ param set-default PWM_MAIN_TIM3 50
 # note it caused FC link loss on this airframe after reflashes.
 param set-default MAV_0_CONFIG 101   # TEL1 (/dev/ttyS1, UART4 -> IMX SOC)
 param set-default MAV_0_MODE 2       # Onboard
-param set-default MAV_0_RATE 0       # Max rate (HIGHRES_IMU up to 250 Hz)
+param set-default MAV_0_RATE 0       # Auto: 230400 / 20 = 11520 bytes/s
 param set-default SER_TEL1_BAUD 230400
+
+# The SD card is on Linux, not the FC. Never start the local file backend.
+# Streaming is requested by the companion recorder; disabling SDLOG_MODE
+# also disables the logger and therefore prevents ULog streaming.
+set LOGGER_ARGS "-m mavlink"
 
 # External telemetry (SiK radio / gimbal) on USART6 = TEL2 (/dev/ttyS2),
 # per ORQA's official APB defaults

@@ -1,5 +1,152 @@
 # Orqa APB / factory firmware reference
 
+Current implementation: [companion/apb](../../companion/apb/README.md) contains
+the SD-only mount fix, guarded recorder, conservative FC log profile and
+installation/rollback procedure. The investigation entries below retain the
+evidence and intermediate findings; their "not yet implemented" statements
+describe the investigation stage, not the current source tree. Physical
+deployment and qualification are still separate from host testing.
+
+## SD card ownership correction (2026-10-22)
+
+The APB microSD is **i.MX8M Plus/Linux storage**, mounted by Orqa at
+`/sdcard`. It is not an STM32 SDMMC bring-up task. Earlier entries below
+describe the provisional vendor PX4 definitions; their pin conflicts do not
+establish the physical connection of the APB card. Keep STM32 SDMMC disabled.
+
+Evidence inspected:
+
+- `DroneWuKong/Ai-Project`, commit
+  `173c89a5bc0697cea636ec02d34b90c944a1d8ef`,
+  [`docs/hardware/orqa_dtk_apb_manual_v1_6.md`](https://github.com/DroneWuKong/Ai-Project/blob/173c89a5bc0697cea636ec02d34b90c944a1d8ef/docs/hardware/orqa_dtk_apb_manual_v1_6.md):
+  section 4 explicitly places the SD card at Linux `/sdcard`; sections 6 and
+  9 describe the FC-to-companion UART connection. This is the repository's
+  manual reference, not a newly inspected electrical schematic.
+- Orqa APB Scarthgap v1.0.5 SDK target sysroot and recovery image both contain
+  `etc/udev/rules.d/automount.rules`, selecting Linux `mmcblk0*`/`mmcblk1*`
+  filesystem devices for `orqa-mount-sd@.service`.
+- `lib/systemd/system/orqa-mount-sd@.service` invokes
+  `etc/udev/scripts/orqa-drive-mounting.sh sdcard ...`; the script uses
+  `systemd-mount` with destination `/sdcard`. Do not infer a fixed SD block
+  device number from those wildcard rules, or confuse the card with eMMC.
+
+SHA-256 of those three SDK files, in the order above:
+
+```text
+cd1657f1daba4f48e97d6bffc3bfbec238caf07ec58434a6440ed8e74c49a5d8  automount.rules
+8db3b861cf328ba91ef7ea5d54e6769b443afa3e9d10760a90bcd9c175dd584f  orqa-mount-sd@.service
+501cf034fb6afb04f4fb8036139ab9b131d005c19863d522c95a76d8616452f6  orqa-drive-mounting.sh
+```
+
+The inspected SDK is stored on GupB under
+`/srv/dev-rig/storage/usb-ssd/orqa-sdk/apb-scarthgap-v1.0.5/sysroots/armv8a-orqa-linux/`.
+These supplied artifacts were read, not modified or deployed.
+
+### Linux-side SD defects found in the supplied helper
+
+1. `is_mounted()` captures `mountpoint -q` stdout and compares it with `0`.
+   Quiet mode produces no output: it must test the command's **exit status**.
+   A read-only host reproduction using the mounted `/proc` returns status 0
+   from `mountpoint` but takes the helper's "not mounted" branch. Therefore
+   its `unmount_sd()` skips its intended unmount call for a mounted path.
+2. `mount_sd()` uses `systemd-mount --no-block` and then creates
+   `/tmp/.orqa_mount_sd`. Job submission is not proof of a completed mount;
+   a later mount failure can leave the marker blocking subsequent attempts.
+
+These are source-level defects, not a diagnosis established on the user's
+running APB. Check the installed script/version and service journal before
+deploying a fix. Do not patch an archived SDK/image as if that fixes the board.
+
+### What PX4 still needs
+
+The intended path is STM32 PX4 → MAVLink UART4 → i.MX UART3
+(`/dev/ttymxc2`, 230400 baud) → ULog receiver → mounted `/sdcard`.
+The inspected Ai-Project `apb/deploy/mavlink-router.conf` forwards telemetry
+but has no log destination configured. A router connection alone does not
+prove flight logs are being recorded. PX4 v1.15.4's logger supports a MAVLink
+backend; a compatible receiver must request and reconstruct that log stream.
+Do not equate ordinary telemetry `.tlog` recording with PX4 ULog recording.
+
+The remaining work is companion mount reliability and end-to-end log capture,
+including UART bandwidth, dropouts, missing/full-card behavior and safe
+recovery. Internal-flash parameters and SPI W25 mission storage on the FC
+remain separate from the companion card. No new firmware build, hardware
+qualification, or successful SD recording is claimed by this correction.
+
+### Logging investigation and host proof (2026-10-22)
+
+**The missing receiver already exists in mavlink-router v4.** Ai-Project's
+build script selects that release, commit
+`42529d55b665e0a9a29e424e186f514c56c2e5b5`. Its
+[`ULog` implementation](https://github.com/mavlink-router/mavlink-router/blob/42529d55b665e0a9a29e424e186f514c56c2e5b5/src/ulog.cpp)
+requests `MAV_CMD_LOGGING_START`, acknowledges reliable header packets and
+reconstructs `.ulg` files. `MavlinkDialect=auto` selects it for a PX4 heartbeat;
+`common` selects it explicitly. Without `[General] Log=...`, the router
+does not instantiate a recorder. That option is absent in the inspected
+Ai-Project companion configuration. This establishes a missing configuration
+in the repository, not the state of the currently installed APB.
+
+The PX4 v1.15.4 application already includes `logger`. Its default backend is
+`all` (file and MAVLink), and a MAVLink logging request starts the streaming
+backend. `SDLOG_MODE=-1` prevents logger startup and must not be used to mean
+"no STM32 SD". For an APB-specific integration, explicitly selecting
+`logger -m mavlink` via startup `LOGGER_ARGS` avoids unnecessary local-file
+attempts and file-backend free-space checks. No firmware change was made in
+this investigation.
+
+**Bandwidth is the other constraint.** In the pinned
+[`mavlink_main.cpp`](https://github.com/PX4/PX4-Autopilot/blob/99c40407ffd7ac184e2d7b4b293f36f10fe561ef/src/modules/mavlink/mavlink_main.cpp),
+rate zero selects `baud / 20`: 11520 bytes/s at 230400 baud, not unlimited
+bandwidth as the existing board-default comment says. ULog's nominal share
+is 70% (8064 bytes/s before packet overhead/packet-rate rounding), and PX4
+denies streaming below a configured link budget of 5000 bytes/s. The default
+log profile includes high-rate topics; a bandwidth-limited profile and
+on-hardware measurements are required before claiming dropout-free logging.
+Simply increasing the serial baud is not justified by the existing APB
+link-loss history. Also, a `logger_topics.txt` file on Linux `/sdcard` is not
+visible to STM32 PX4's `/fs/microsd` path.
+
+**Host-only experiment:** compiled unmodified router v4 natively on GupB,
+then ran a mock MAVLink 2 PX4 sender through a core router and a separate
+recorder router over loopback UDP. Five cases passed:
+
+1. No `Log` option: no log-start request.
+2. Normal recording: log-start request, header ACKs, duplicate suppression,
+   exact reconstructed bytes; telemetry forwarding continues after recorder
+   termination.
+3. A ULog record split across two MAVLink packets reconstructs correctly.
+4. After a simulated packet gap, a valid `first_message_offset` restores
+   message alignment. This is **not** recovery of lost samples.
+5. An initial file-open failure disables recording; fixing the path alone
+   does not restart it. The recorder needs to be restarted.
+
+The three generated `.ulg` files were also parsed independently with
+`pyulog`, recovering the expected test dataset and both sample values.
+The normal case intentionally used an ordinary, unmounted directory and
+the router wrote there successfully: **the router does not enforce SD mount
+presence**. This reproduces the risk of filling the companion root filesystem
+when `/sdcard` is just a directory.
+
+Evidence remains on GupB in `/tmp/apb-logging-investigation.3yZyQs/`:
+`probe_logging.py`, per-case configurations/logs/output files, and the pinned
+router source/build. Probe SHA-256:
+`f9bd5c02654feb711494b25009b02a767250a97de261507743cbd1a37b3999a7`.
+These are synthetic protocol tests, not a PX4 flight simulation or physical
+UART/SD qualification.
+
+**Recommended implementation, not yet deployed:** leave the core router as
+the sole owner of `/dev/ttymxc2`; add a loopback endpoint for a separate ULog
+recorder process. Gate that recorder on the actual writable SD mount, monitor
+free space and failures, and restart only the recorder on recovery. Native
+ULog performs synchronous file writes in its routing loop, so putting it in
+the core router would couple slow SD writes to telemetry forwarding. Separate
+processes isolate that disk-I/O failure, but do not remove shared UART bandwidth
+or CPU constraints. Do not condition or stop the core telemetry service on SD
+availability. Graceful recorder shutdown must stop the FC log stream; abrupt
+failure/recovery also needs testing. Router v4 uses logger system ID 2, which
+must not conflict with other participants. Keep log auto-deletion disabled
+until a retention policy is approved.
+
 ## `hwdef-bl.dat`
 ArduPilot bootloader hardware definition for the Orqa DTK APB FC
 (`APJ_BOARD_ID AP_HW_ORQAAPB`), as provided by Orqa. Key facts:

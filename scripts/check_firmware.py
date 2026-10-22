@@ -114,6 +114,8 @@ def main():
             subprocess.run(["git", "-C", str(args.px4), "apply", "--reverse", "--check", str(patch)], check=True)
         report.update({"target": args.target, "px4_revision": config["px4_revision"],
                        "port_revision": revision(ROOT), "container": config["container"],
+                       "port_worktree_dirty": bool(subprocess.check_output(
+                           ["git", "-C", str(ROOT), "status", "--porcelain"], text=True).strip()),
                        "hardware_validated": False})
         report["sha256"] = {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
                             for p in (raw_path, bundle_path)}
