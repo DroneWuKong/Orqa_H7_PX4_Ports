@@ -1,5 +1,12 @@
 # Orqa PX4 Board Ports
 
+APB SD logging: [easy setup, status and rollback](companion/apb/QUICKSTART.md).
+
+**APB easy-setup release:** [v0.1.0-rc3](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/tag/v0.1.0-rc3).
+Use its matching `orqa_apb_default.px4` and `orqa-apb-companion.tar.gz`.
+The older rc2 downloads and build evidence below are historical; rc2 predates
+the APB companion logging integration. The new release is hardware-unvalidated.
+
 PX4 v1.15.4 board ports for the **Orqa H7 QuadCore**, **H7 Wingcore**,
 the FC side of the **DTK APB**, and the **F405 Pro**.
 
