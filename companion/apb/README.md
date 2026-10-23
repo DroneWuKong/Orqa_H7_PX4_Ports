@@ -1,5 +1,8 @@
 # APB PX4 logging installation and validation
 
+Start here: [one-command setup and status](QUICKSTART.md). Detailed manual
+installation and validation instructions follow below.
+
 This package records PX4 ULog files on the i.MX-owned SD card while keeping
 SD writes out of the core telemetry router. It requires the matching APB PX4
 firmware from this tree and a separate installation on the Linux companion.
