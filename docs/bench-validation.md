@@ -1,5 +1,9 @@
 # Storage bench validation
 
+For a fully disarmed APB **logging-only** run, use the
+[APB logging acceptance checklist](../companion/apb/BENCH_ACCEPTANCE.md).
+The broader output/arming/flight checks below are separate work.
+
 Build success is not a hardware test. Record board model/revision, firmware
 manifest, SD card model, console output and the outcome of each test. Remove
 propellers before powering a flight controller on the bench. Save parameters

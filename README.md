@@ -4,8 +4,10 @@ APB SD logging: [easy setup, status and rollback](companion/apb/QUICKSTART.md).
 
 **APB easy-setup release:** [v0.1.0-rc3](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/tag/v0.1.0-rc3).
 Use its matching `orqa_apb_default.px4` and `orqa-apb-companion.tar.gz`.
-The older rc2 downloads and build evidence below are historical; rc2 predates
-the APB companion logging integration. The new release is hardware-unvalidated.
+The download table below uses rc3 throughout. The rc2 build-size table remains
+historical; rc2 predates the APB companion logging integration. This release is
+hardware-unvalidated. See the [release audit](docs/APB_RELEASE_AUDIT_2026-10-24.md)
+and [disarmed logging checklist](companion/apb/BENCH_ACCEPTANCE.md).
 
 PX4 v1.15.4 board ports for the **Orqa H7 QuadCore**, **H7 Wingcore**,
 the FC side of the **DTK APB**, and the **F405 Pro**.
@@ -28,12 +30,14 @@ intend to replace the installed bootloader.
 
 | Board | Application | Bootloader |
 |-------|-------------|------------|
-| H7 QuadCore | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_h7quadcore_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_h7quadcore_bootloader.bin) |
-| H7 Wingcore | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_h7wingcore_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_h7wingcore_bootloader.bin) |
-| DTK APB | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_apb_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_apb_bootloader.bin) |
-| F405 Pro | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc2/orqa_f405pro_default.px4) | Use the factory ArduPilot bootloader |
+| H7 QuadCore | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc3/orqa_h7quadcore_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc3/orqa_h7quadcore_bootloader.bin) |
+| H7 Wingcore | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc3/orqa_h7wingcore_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc3/orqa_h7wingcore_bootloader.bin) |
+| DTK APB | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc3/orqa_apb_default.px4) | [Download `.bin`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc3/orqa_apb_bootloader.bin) |
+| F405 Pro | [Download `.px4`](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/download/v0.1.0-rc3/orqa_f405pro_default.px4) | Use the factory ArduPilot bootloader |
 
-[View all release assets and checksums](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/tag/v0.1.0-rc2).
+[View all rc3 release assets and checksums](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/tag/v0.1.0-rc3).
+For APB logging also download `orqa-apb-companion.tar.gz` from that release.
+The application and companion are a pair; a bootloader replacement is not required.
 
 ---
 
