@@ -1,0 +1,219 @@
+{
+  "audit_date": "2026-10-24",
+  "release_url": "https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/releases/tag/v0.1.0-rc3",
+  "verification": {
+    "repository": "Orqa_H7_PX4_Ports",
+    "tag": "v0.1.0-rc3",
+    "port_revision": "84d228c63dc80945ee36ab3f872286dbc3c43571",
+    "assets_downloaded": 23,
+    "checksum_entries_verified": 22,
+    "manifests_verified": 7,
+    "source_input_hash_comparisons": 675,
+    "generated_bootloader_inputs_verified": [
+      "boards/orqa/h7quadcore/extras/orqa_h7quadcore_bootloader.bin",
+      "boards/orqa/apb/extras/orqa_apb_bootloader.bin",
+      "boards/orqa/h7wingcore/extras/orqa_h7wingcore_bootloader.bin"
+    ],
+    "companion_files_match_tag": 10,
+    "full_source_files_match_tag": 0,
+    "clean_and_repeat_staging": "PASS",
+    "firmware_payloads_verified": [
+      "orqa_apb_default.px4",
+      "orqa_f405pro_default.px4",
+      "orqa_h7quadcore_default.px4",
+      "orqa_apb_bootloader.px4",
+      "orqa_h7wingcore_bootloader.px4",
+      "orqa_h7wingcore_default.px4",
+      "orqa_h7quadcore_bootloader.px4"
+    ],
+    "hardware_tested": false,
+    "companion_sha256": "631ecf819ee343f3d5e21b25753a066590108b56e86e2b7fe9ebcd040ad5cd10"
+  },
+  "assets": [
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa-apb-companion.tar.gz",
+      "size": 16389,
+      "sha256": "631ecf819ee343f3d5e21b25753a066590108b56e86e2b7fe9ebcd040ad5cd10",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_apb_bootloader.bin",
+      "size": 41796,
+      "sha256": "a74bd10c3e665eb3ac13c4d04f1f4ff1fa7e607fabe5e1f6faae8b19597bce1d",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_apb_bootloader.manifest.json",
+      "size": 12042,
+      "sha256": "4a4df189c410af0518876b4af151f7f55ba62396e0d3ce0fb62c51247924976b",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_apb_bootloader.px4",
+      "size": 53672,
+      "sha256": "adb2b54d80f2dfb575edd26b39ca14d97cfeedfbaacab68f7808df33bcb70367",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_apb_default.bin",
+      "size": 1517292,
+      "sha256": "54c37fd17ee71320043e465a16995557e5e13fb642d290f7f9d6c2736681cbc1",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_apb_default.manifest.json",
+      "size": 11917,
+      "sha256": "93a4f1599721fd9dfea17804544317770bc618616faceebae4538bd2d437b38e",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_apb_default.px4",
+      "size": 1424249,
+      "sha256": "363c2d95d2b5fc09919eeffaa84ed1b272923d8f9e376f2e24820437be8dd9fc",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_f405pro_default.bin",
+      "size": 957425,
+      "sha256": "bb9a3366d20eb6eaa7f36704279144918dcecb907358ca0492e84f67d1b3b5a8",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_f405pro_default.manifest.json",
+      "size": 11927,
+      "sha256": "e8e364689a203e82f6e021febdd0530bf26ac861667a095a5f5e0137c4c7cdbb",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_f405pro_default.px4",
+      "size": 914714,
+      "sha256": "a77ccc66d3df8b3f61761153c772564cd6253ed1781080c4c54b831113fc2360",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_h7quadcore_bootloader.bin",
+      "size": 41804,
+      "sha256": "fa78aac252381b3386d31717715d25541af5268db0f8b784b396705f730a92f1",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_h7quadcore_bootloader.manifest.json",
+      "size": 12077,
+      "sha256": "1a972a888ec897ac8aed3fcf492ea81c3ffa64bc81efe4171ecdc421d787b629",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_h7quadcore_bootloader.px4",
+      "size": 53681,
+      "sha256": "a2ef005fb34477852880b381e29423df652176a35e598441f79c342cf0e4ff80",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_h7quadcore_default.bin",
+      "size": 1532248,
+      "sha256": "19ea5fef8daa93601c59d346d2ebe3e56f3bfe28d06630e3dd4884a2ed9f34c0",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_h7quadcore_default.manifest.json",
+      "size": 11938,
+      "sha256": "082fdd96729e41942e65e9129d3918114e778dd778d43fad4b0ab314c40d0488",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_h7quadcore_default.px4",
+      "size": 1433818,
+      "sha256": "bcaec4e7e4fc0420d548f0da4d2689e06b2be661a5578bcd3eea98593a363489",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_h7wingcore_bootloader.bin",
+      "size": 41804,
+      "sha256": "f3deb8d7ce244cff0d88d02ad4dafb6a23a9fabcfb7a257683f9a34df6f2a4f9",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_h7wingcore_bootloader.manifest.json",
+      "size": 12077,
+      "sha256": "2e652da5359fd3217692261bf0e7f079a790776c59503396f466e5d1479ca120",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_h7wingcore_bootloader.px4",
+      "size": 53681,
+      "sha256": "98ea8656345c7b36730fd356922638e85b5fbae6f2c3f477877e9c138c0f6dea",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_h7wingcore_default.bin",
+      "size": 1549164,
+      "sha256": "4751bfd30a6ff5d9e13434cd647206965ea1c165df6bd91684c8156762eac50c",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_h7wingcore_default.manifest.json",
+      "size": 11938,
+      "sha256": "fe13c1485badc04c2153e4e59233827fd958456dd06cdba8c6157733493cfe6e",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "orqa_h7wingcore_default.px4",
+      "size": 1465930,
+      "sha256": "0b9ebb2d5fc517dc7d130dc1a1671f6232091a87bf4bbcb4f595354dfe9ba02d",
+      "api_match": true,
+      "size_match": true
+    },
+    {
+      "repo": "Orqa_H7_PX4_Ports",
+      "name": "SHA256SUMS",
+      "size": 2112,
+      "sha256": "fb843988eb7c9e34c8b08f26b9b5a0adc9f92dd36c2a9b819858fecc1049b7eb",
+      "api_match": true,
+      "size_match": true
+    }
+  ],
+  "physical_apb_tests": "NOT TESTED"
+}

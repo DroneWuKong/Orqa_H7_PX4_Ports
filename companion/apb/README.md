@@ -35,7 +35,7 @@ and unmount cleanly before intentional removal; insertion/removal under load
 is a fault to test, not the normal operating procedure.
 
 The firmware selects MAVLink-only logging and 17 rate-limited, instance-zero
-topics in [logging_topics.inc](../../boards/orqa/apb/src/logging_topics.inc).
+topics in [logging_topics.inc](https://github.com/DroneWuKong/Orqa_H7_PX4_Ports/blob/v0.1.0-rc3/boards/orqa/apb/src/logging_topics.inc).
 The generated-struct budget is 4768 bytes/s including conservative padding
 and ULog data-record headers. The periodic-data gate is 5500 bytes/s; the
 nominal ULog wire budget is 8064 bytes/s at the current `MAV_0_RATE=0` setting.
@@ -72,7 +72,7 @@ Requirements:
 
 - `mavlink-router` v4, pinned upstream commit
   `42529d55b665e0a9a29e424e186f514c56c2e5b5` (the Ai-Project build script uses v4).
-- Python 3, `findmnt`, `systemd-mount` and `systemd-umount` on Linux. No Python
+- Python 3.10+, `findmnt`, `systemd-mount` and `systemd-umount` on Linux. No Python
   third-party packages are needed by the deployed supervisor.
 - Core router loads `/etc/mavlink-router/config.d`. If its service overrides
   the config directory, place the endpoint there instead after review.
@@ -90,7 +90,11 @@ Requirements:
 
 ## Install and activate on the bench
 
-Copy this complete directory onto the companion. From that directory:
+Copy this complete directory onto the companion. The low-level command below
+always requests the known vendor mount repair. If a previous PX4, ArduPilot,
+Betaflight or custom mount repair is already in use, preserve it and use
+`sudo python3 easy.py setup --bench` instead; the low-level installer deliberately
+refuses a different helper. For a pristine, verified vendor helper, run:
 
 ```sh
 sudo python3 install.py
@@ -142,7 +146,10 @@ when the reserve is reached. Free space manually after exporting logs.
 Use a systemd override for a larger reserve or a non-default FC ID, preserving
 all other arguments. Do not lower the reserve below the 32 MiB CLI minimum.
 
-## Verify before flight
+## Verify logging on the disarmed bench
+
+Use [BENCH_ACCEPTANCE.md](BENCH_ACCEPTANCE.md) for exact logging acceptance
+criteria. Arming transitions and flight checks below are separate qualification.
 
 ```sh
 python3 /usr/local/lib/orqa-px4/recorder.py --check
